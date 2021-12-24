@@ -1,6 +1,8 @@
 /**
  * 
  * Based on: https://github.com/RAKWireless/WisBlock/blob/master/examples/RAK4630/solutions/Environment_Monitoring/Environment_Monitoring.ino
+ * Updated to match https://www.arduino.cc/en/Reference/StyleGuide
+ * This code reads tempreature, pressure etc. from an environment sensor and uploads it via Helium network.
  * Original comment:
  * @file Environment_Monitoring.ino
  * @author rakwireless.com
@@ -34,7 +36,7 @@
 static uint8_t m_lora_app_data_buffer[LORAWAN_APP_DATA_BUFF_SIZE];            //< Lora user application data buffer.
 static lmh_app_data_t m_lora_app_data = {m_lora_app_data_buffer, 0, 0, 0, 0}; //< Lora user application data structure.
 
-void lorawan_confirm_class_handler(DeviceClass_t Class)
+void lorawanConfirmClassHandler(DeviceClass_t Class)
 {
   Serial.printf("switch to class %c done\n", "ABC"[Class]);
   // Informs the server that switch has occurred ASAP
@@ -47,7 +49,7 @@ void lorawan_confirm_class_handler(DeviceClass_t Class)
  *
  * @param[in] app_data  Pointer to rx data
  */
-void lorawan_rx_handler(lmh_app_data_t *app_data)
+void lorawanRxHandler(lmh_app_data_t *app_data)
 {
   Serial.printf(
       "LoRa Packet received on port %d, size:%d, rssi:%d, snr:%d, data:%s\n",
@@ -57,7 +59,7 @@ void lorawan_rx_handler(lmh_app_data_t *app_data)
 
 /**@brief LoRa function for handling OTAA join failed
  */
-static void lorawan_join_failed_handler(void)
+static void lorawanJoinFailedHandler(void)
 {
   Serial.println("OTAA join failed!");
   Serial.println("Check your EUI's and Keys's!");
@@ -79,18 +81,18 @@ void lorawan_has_joined_handler(void)
   }
 }
 
-static lmh_callback_t g_lora_callbacks = {
+static lmh_callback_t G_LORA_CALLBACKS = {
     BoardGetBatteryLevel, BoardGetUniqueId,
-    BoardGetRandomSeed, lorawan_rx_handler,
-    lorawan_has_joined_handler, lorawan_confirm_class_handler,
-    lorawan_join_failed_handler};
+    BoardGetRandomSeed, lorawanRxHandler,
+    lorawan_has_joined_handler, lorawanConfirmClassHandler,
+    lorawanJoinFailedHandler};
 
 /**@brief Structure containing LoRaWan parameters, needed for lmh_init()
 */
-static lmh_param_t g_lora_param_init = {LORAWAN_ADR_ON, LORAWAN_DATERATE, LORAWAN_PUBLIC_NETWORK, JOINREQ_NBTRIALS, LORAWAN_TX_POWER, LORAWAN_DUTYCYCLE_OFF};
+static lmh_param_t G_LORA_PARAM_INIT = {LORAWAN_ADR_ON, LORAWAN_DATERATE, LORAWAN_PUBLIC_NETWORK, JOINREQ_NBTRIALS, LORAWAN_TX_POWER, LORAWAN_DUTYCYCLE_OFF};
 
 Adafruit_BME680 bme;
-void init_bme680(void)
+void initBme680(void)
 {
   Wire.begin();
 
@@ -115,7 +117,7 @@ void setup()
 
   // Initialize LoRa chip.
   lora_rak4630_init();
-  init_bme680();
+  initBme680();
 
   // Initialize Serial for debug output
   time_t timeout = millis();
@@ -173,10 +175,10 @@ void setup()
 
   // creat a user timer to send data to server period
   uint32_t err_code;
-  err_code = timers_init();
+  err_code = timersInit();
   if (err_code != 0)
   {
-    Serial.printf("timers_init failed - %d\n", err_code);
+    Serial.printf("timersInit failed - %d\n", err_code);
     return;
   }
 
@@ -186,7 +188,7 @@ void setup()
   lmh_setAppKey(nodeAppKey);
 
   // Initialize LoRaWan
-  err_code = lmh_init(&g_lora_callbacks, g_lora_param_init, OTAA, CURRENT_CLASS, CURRENT_REGION);
+  err_code = lmh_init(&G_LORA_CALLBACKS, G_LORA_PARAM_INIT, OTAA, CURRENT_CLASS, CURRENT_REGION);
   if (err_code != 0)
   {
     Serial.printf("lmh_init failed - %d\n", err_code);
@@ -199,8 +201,8 @@ void setup()
 /**@brief Structure containing LoRaWan callback functions, needed for lmh_init()
 */
 
-static uint32_t count = 0;
-static uint32_t count_fail = 0;
+static uint32_t COUNT = 0;
+static uint32_t COUNT_FAIL = 0;
 
 void loop()
 {
@@ -210,25 +212,25 @@ void loop()
 
 /**@brief Function for handling user timerout event.
  */
-void tx_lora_periodic_handler(void)
+void txLoraPeriodicHandler(void)
 {
   TimerSetValue(&appTimer, LORAWAN_APP_INTERVAL);
   TimerStart(&appTimer);
   Serial.println("Sending frame now...");
-  send_lora_frame();
+  sendLoraFrame();
 }
 
 /**@brief Function for the Timer initialization.
  *
  * @details Initializes the timer module. This creates and starts application timers.
  */
-uint32_t timers_init(void)
+uint32_t timersInit(void)
 {
-  TimerInit(&appTimer, tx_lora_periodic_handler);
+  TimerInit(&appTimer, txLoraPeriodicHandler);
   return 0;
 }
 
-void bme680_get()
+void bme680Get()
 {
   Serial.print("result: ");
   uint32_t i = 0;
@@ -269,7 +271,7 @@ void bme680_get()
   Serial.printf("sending..\n");
 }
 
-void send_lora_frame(void)
+void sendLoraFrame(void)
 {
   if (lmh_join_status_get() != LMH_SET)
   {
@@ -282,7 +284,7 @@ void send_lora_frame(void)
     return;
   }
 
-  bme680_get();
+  bme680Get();
 
   Serial.printf("size2: %d\n", m_lora_app_data.buffsize);
   // for (int i = 0; i < m_lora_app_data.buffsize - 1; ++i) {
@@ -293,12 +295,12 @@ void send_lora_frame(void)
   lmh_error_status error = lmh_send(&m_lora_app_data, CURRENT_CONFIRM);
   if (error == LMH_SUCCESS)
   {
-    count++;
-    Serial.printf("lmh_send ok count %d\n", count);
+    COUNT++;
+    Serial.printf("lmh_send ok COUNT %d\n", COUNT);
   }
   else
   {
-    count_fail++;
-    Serial.printf("lmh_send fail count %d\n", count_fail);
+    COUNT_FAIL++;
+    Serial.printf("lmh_send fail COUNT %d\n", COUNT_FAIL);
   }
 }
