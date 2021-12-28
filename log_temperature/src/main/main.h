@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LoRaWan-RAK4630.h> //http://librarymanager/All#SX126x
+//#include <LoRaWan-RAK4630.h> //http://librarymanager/All#SX126x
 
 // RAK4630 supply two LED
 #ifndef LED_BUILTIN
