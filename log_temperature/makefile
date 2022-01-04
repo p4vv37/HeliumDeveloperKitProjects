@@ -1,19 +1,20 @@
 SRC=src/main/main
 CWD = $(shell pwd)
 ARDUINO_PATH = /home/$(USER)/apps/arduino
+
 RAK_PATH = $(CWD)/tmp/RAK-nRF52-Arduino-1.0.1
 CMSIS_PATH = $(CWD)/tmp/ARM.CMSIS.5.7.0
 GCC_PATH = $(CWD)/tmp/gcc-arm-none-eabi-9-2019-q4-major
-NRFJ_PATH = $(CWD)/tmp/nrfjprog
 ADAFRUIT_PATH = $(CWD)/tmp/Adafruit_BME680-2.0.1
 ADAFRUIT_IO_PATH = $(CWD)/tmp/Adafruit_BusIO-1.9.9
 ADAFRUIT_SENSOR_PATH = $(CWD)/tmp/Adafruit_Sensor-1.1.4
-NRFX_PATH = $(CWD)/tmp/nrfx-2.7.0
-BOOTLOADER_PATH = $(CWD)/tmp/Adafruit_nRF52_Bootloader-0.6.3
+SX126_PATH = $(CWD)/tmp/SX126x-Arduino-2.0.8
+WISBLOCK_PATH = $(CWD)/tmp/WisBlock
 
 INCLUDE= -I "$(RAK_PATH)/cores/nRF5" 
 INCLUDE+= -I "$(RAK_PATH)/variants/WisCore_RAK4631_Board" 
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/nordic/nrfx/mdk"
+INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/nordic/nrfx"
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/" 
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/nordic/softdevice/s132_nrf52_6.1.1_API/include"
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/nordic/nrfx/hal"
@@ -23,13 +24,14 @@ INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/freertos/Source/include"
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/freertos/config"
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/freertos/portable/GCC/nrf52"
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/freertos/portable/CMSIS/nrf52"
+INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/freertos/portable/CMSIS/Core/Include"
 INCLUDE+= -I "$(RAK_PATH)/libraries/Adafruit_TinyUSB_Arduino/src/arduino"
 INCLUDE+= -I "$(RAK_PATH)/libraries/SPI"
-INCLUDE+= -I "$(BOOTLOADER_PATH)/lib/sdk/components/libraries/timer" 
-INCLUDE+= -I "$(BOOTLOADER_PATH)/lib/sdk/components/libraries/util" 
-INCLUDE+= -I "$(BOOTLOADER_PATH)/src" 
-INCLUDE+= -I "$(BOOTLOADER_PATH)/src/boards" 
-INCLUDE+= -I "/home/pawel/git/WisBlock/bootloader/RAK4630/V0.4.1/Adafruit_nRF52_Bootloader_new/src/boards/wiscore_rak4631_board"
+INCLUDE+= -I "$(WISBLOCK_PATH)/bootloader/RAK4630/Latest/WisCore_RAK4631_Bootloader/lib/sdk/components/libraries/timer" 
+INCLUDE+= -I "$(WISBLOCK_PATH)/bootloader/RAK4630/Latest/WisCore_RAK4631_Bootloader/lib/sdk/components/libraries/util" 
+INCLUDE+= -I "$(WISBLOCK_PATH)/bootloader/RAK4630/Latest/WisCore_RAK4631_Bootloader/src" 
+INCLUDE+= -I "$(WISBLOCK_PATH)/bootloader/RAK4630/Latest/WisCore_RAK4631_Bootloader/src/boards" 
+INCLUDE+= -I "$(WISBLOCK_PATH)/bootloader/RAK4630/Latest/WisCore_RAK4631_Bootloader/src/boards/wiscore_rak4631_board"
 
 INCLUDE+= -I "$(ARDUINO_PATH)/hardware/arduino/avr/cores/arduino"
 INCLUDE+= -I "$(ARDUINO_PATH)/hardware/arduino/avr/libraries/Wire/src"
@@ -38,7 +40,10 @@ INCLUDE+= -I "$(ADAFRUIT_PATH)"
 INCLUDE+= -I "$(ADAFRUIT_IO_PATH)" 
 INCLUDE+= -I "$(ADAFRUIT_SENSOR_PATH)" 
 
-INCLUDE+= -I "/home/pawel/.arduino15/packages/rakwireless/tools/CMSIS/5.7.0/CMSIS/Core/Include/" -I "/home/pawel/.arduino15/packages/rakwireless/tools/CMSIS/5.7.0/CMSIS/DSP/Include/" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/nrfx" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/nrfx/hal" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/nrfx/mdk" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/nrfx/soc" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/nrfx/drivers/include" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/nrfx/drivers/src" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/softdevice/s140_nrf52_6.1.1_API/include" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/softdevice/s140_nrf52_6.1.1_API/include/nrf52" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/freertos/Source/include" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/freertos/config" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/freertos/portable/GCC/nrf52" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/freertos/portable/CMSIS/nrf52" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/sysview/SEGGER" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/sysview/Config" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/libraries/Adafruit_TinyUSB_Arduino/src/arduino" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/variants/WisCore_RAK4631_Board" -I "/home/pawel/Arduino/libraries/SX126x-Arduino/src" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/libraries/SPI" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/libraries/Wire" -I "/home/pawel/Arduino/libraries/Adafruit_Unified_Sensor" -I "/home/pawel/Arduino/libraries/Adafruit_BME680_Library" -I "/home/pawel/Arduino/libraries/Adafruit_BusIO" 
+INCLUDE+= -I "$(CMSIS_PATH)/CMSIS/Core/Include/" 
+INCLUDE+= -I "$(RAK_PATH)/variants/WisCore_RAK4631_Board"
+INCLUDE+= -I "$(SX126_PATH)/src" 
+
 CXX=$(GCC_PATH)/bin/arm-none-eabi-g++ 
 AVR_BIN_DIR=$(ARDUINO_PATH)/hardware/tools/avr/bin
 
@@ -56,6 +61,10 @@ $(SRC).hex: $(SRC).elf
 	$(GCC_PATH)/bin/arm-none-eabi-objcopy -O ihex $< $@
 
 $(SRC).elf: $(SRC).c
+
+	@if [ -d "$(ARDUINO_PATH)" ]]; then\
+		echo "Arduino need to be installed in $(ARDUINO_PATH)"; \
+	fi
 
 	@if [ -d "tmp" ]]; then\
         echo "tmp exists"; \
@@ -83,13 +92,6 @@ $(SRC).elf: $(SRC).c
 		wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2019q4/gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2 -O tmp/gcc.tar.bz2;\
 		tar -xvjf tmp/gcc.tar.bz2 -C tmp;\
 	fi
-
-	@if [ -d "$(NRFJ_PATH)" ]; then \
-        echo "$(NRFJ_PATH) exists"; \
-	else \
-		wget https://github.com/adafruit/Adafruit_nRF52_Arduino/releases/download/gcc-5_2-2015q4/nrfjprog-9.4.0-linux64.tar.bz2 -O tmp/nrfjprog.tar.bz2;\
-		tar -xvjf tmp/nrfjprog.tar.bz2 -C tmp;\
-	fi
 	
 	@if [ -d "$(ADAFRUIT_PATH)" ]; then \
         echo "$(ADAFRUIT_PATH) exists"; \
@@ -110,29 +112,32 @@ $(SRC).elf: $(SRC).c
 	else \
 		wget https://github.com/adafruit/Adafruit_Sensor/archive/refs/tags/1.1.4.tar.gz -O tmp/adasensor.tar.gz;\
 		tar -xzf tmp/adasensor.tar.gz -C tmp;\
-	fi	
+	fi		
 
-	@if [ -d "$(NRFX_PATH)" ]; then \
-        echo "$(NRFX_PATH) exists"; \
+	@if [ -d "$(SX126_PATH)" ]; then \
+        echo "$(SX126_PATH) exists"; \
 	else \
-		wget https://github.com/NordicSemiconductor/nrfx/archive/refs/tags/v2.7.0.tar.gz -O tmp/nrfx.tar.gz;\
-		tar -xzf tmp/nrfx.tar.gz -C tmp;\
+		wget https://github.com/beegee-tokyo/SX126x-Arduino/archive/refs/tags/2.0.8.tar.gz -O tmp/sx.tar.gz;\
+		tar -xzf tmp/sx.tar.gz -C tmp;\
 	fi	
 	
-	@if [ -d "$(BOOTLOADER_PATH)" ]; then \
-        echo "$(BOOTLOADER_PATH) exists"; \
+	@if [ -d "$(WISBLOCK_PATH)" ]; then \
+        echo "$(WISBLOCK_PATH) exists"; \
 	else \
-		wget https://github.com/adafruit/Adafruit_nRF52_Bootloader/archive/refs/tags/0.6.3.tar.gz -O tmp/bootloader.tar.gz;\
-		tar -xzf tmp/bootloader.tar.gz -C tmp;\
+		git clone https://github.com/RAKWireless/WisBlock tmp/WisBlock;\
 	fi	
-
 	$(CXX) $(CFLAGS) $^ -o $@
 	$(GCC_PATH)/bin/arm-none-eabi-size $(SRC).elf
 
 .PHONY:
 clean:
 	@echo Cleaning ...
-	rm -f tmp/*
+	rm -fr tmp/*
+	rm -f $(SRC).elf
+	rm -f $(SRC).hex
+.PHONY:
+reset:
+	@echo Cleaning ...
 	rm -f $(SRC).elf
 	rm -f $(SRC).hex
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/nordic/nrfx/drivers/include"
