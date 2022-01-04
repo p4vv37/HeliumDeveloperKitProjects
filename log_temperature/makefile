@@ -8,6 +8,8 @@ NRFJ_PATH = $(CWD)/tmp/nrfjprog
 ADAFRUIT_PATH = $(CWD)/tmp/Adafruit_BME680-2.0.1
 ADAFRUIT_IO_PATH = $(CWD)/tmp/Adafruit_BusIO-1.9.9
 ADAFRUIT_SENSOR_PATH = $(CWD)/tmp/Adafruit_Sensor-1.1.4
+NRFX_PATH = $(CWD)/tmp/nrfx-2.7.0
+BOOTLOADER_PATH = $(CWD)/tmp/Adafruit_nRF52_Bootloader-0.6.3
 
 INCLUDE= -I "$(RAK_PATH)/cores/nRF5" 
 INCLUDE+= -I "$(RAK_PATH)/variants/WisCore_RAK4631_Board" 
@@ -23,9 +25,11 @@ INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/freertos/portable/GCC/nrf52"
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/freertos/portable/CMSIS/nrf52"
 INCLUDE+= -I "$(RAK_PATH)/libraries/Adafruit_TinyUSB_Arduino/src/arduino"
 INCLUDE+= -I "$(RAK_PATH)/libraries/SPI"
-INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/nordic/nrfx/drivers/include"
-
-INCLUDE+= -I "$(CMSIS_PATH)/CMSIS/Include"
+INCLUDE+= -I "$(BOOTLOADER_PATH)/lib/sdk/components/libraries/timer" 
+INCLUDE+= -I "$(BOOTLOADER_PATH)/lib/sdk/components/libraries/util" 
+INCLUDE+= -I "$(BOOTLOADER_PATH)/src" 
+INCLUDE+= -I "$(BOOTLOADER_PATH)/src/boards" 
+INCLUDE+= -I "/home/pawel/git/WisBlock/bootloader/RAK4630/V0.4.1/Adafruit_nRF52_Bootloader_new/src/boards/wiscore_rak4631_board"
 
 INCLUDE+= -I "$(ARDUINO_PATH)/hardware/arduino/avr/cores/arduino"
 INCLUDE+= -I "$(ARDUINO_PATH)/hardware/arduino/avr/libraries/Wire/src"
@@ -34,15 +38,14 @@ INCLUDE+= -I "$(ADAFRUIT_PATH)"
 INCLUDE+= -I "$(ADAFRUIT_IO_PATH)" 
 INCLUDE+= -I "$(ADAFRUIT_SENSOR_PATH)" 
 
+INCLUDE+= -I "/home/pawel/.arduino15/packages/rakwireless/tools/CMSIS/5.7.0/CMSIS/Core/Include/" -I "/home/pawel/.arduino15/packages/rakwireless/tools/CMSIS/5.7.0/CMSIS/DSP/Include/" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/nrfx" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/nrfx/hal" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/nrfx/mdk" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/nrfx/soc" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/nrfx/drivers/include" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/nrfx/drivers/src" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/softdevice/s140_nrf52_6.1.1_API/include" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/nordic/softdevice/s140_nrf52_6.1.1_API/include/nrf52" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/freertos/Source/include" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/freertos/config" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/freertos/portable/GCC/nrf52" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/freertos/portable/CMSIS/nrf52" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/sysview/SEGGER" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/sysview/Config" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/libraries/Adafruit_TinyUSB_Arduino/src/arduino" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/variants/WisCore_RAK4631_Board" -I "/home/pawel/Arduino/libraries/SX126x-Arduino/src" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/libraries/SPI" -I "/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/libraries/Wire" -I "/home/pawel/Arduino/libraries/Adafruit_Unified_Sensor" -I "/home/pawel/Arduino/libraries/Adafruit_BME680_Library" -I "/home/pawel/Arduino/libraries/Adafruit_BusIO" 
 CXX=$(GCC_PATH)/bin/arm-none-eabi-g++ 
 AVR_BIN_DIR=$(ARDUINO_PATH)/hardware/tools/avr/bin
 
-#-- configurations for ATmega328P
 MCU=-mcpu=cortex-m4 #-- CPU
 CPU_SPEED=-DF_CPU=16000000UL #-- clock speed of the board (mentioned on the quartz)
 CFLAGS=$(MCU) $(CPU_SPEED) -Os -w -Wl,--gc-sections -ffunction-sections -fdata-sections $(INCLUDE) 
-#CFLAGS+= -mthumb -c -g -mfloat-abi=hard -mfpu=fpv4-sp-d16 -u _printf_float -std=gnu++11 -fno-threadsafe-statics -nostdlib --param max-inline-insns-single=500 -fno-rtti -fno-exceptions -w -x c++ -E -CC 
-CFLAGS+= -mthumb -c -g -mfloat-abi=hard -mfpu=fpv4-sp-d16 -u _printf_float -std=gnu++11 -fno-threadsafe-statics -nostdlib --param max-inline-insns-single=500 -fno-rtti -fno-exceptions -w -x c++ -E -CC 
+CFLAGS+= -mthumb -c -g -mfloat-abi=hard -mfpu=fpv4-sp-d16 -u _printf_float -std=gnu++11 -fno-threadsafe-statics -nostdlib --param max-inline-insns-single=500 -fno-rtti -fno-exceptions -w -x c++
 CFLAGS+= -DF_CPU=64000000 -DARDUINO=10819 -DARDUINO_WisCore_RAK4631_Board -DARDUINO_ARCH_NRF52 "-DARDUINO_BSP_VERSION=\"1.0.1\"" -DDEBUG -DNRF52840_XXAA -DUSBCON -DUSE_TINYUSB -DUSB_VID=0x239A -DUSB_PID=0x8029 "-DUSB_MANUFACTURER=\"RAKwireless\"" "-DUSB_PRODUCT=\"WisBlock RAK4631\"" -DSOFTDEVICE_PRESENT -DARDUINO_NRF52_ADAFRUIT -DNRF52_SERIES -DDX_CC_TEE -DLFS_NAME_MAX=64 -Ofast -DCFG_DEBUG=0 -DCFG_LOGGER=1 -DCFG_SYSVIEW=0 
 
 
@@ -50,7 +53,7 @@ CFLAGS+= -DF_CPU=64000000 -DARDUINO=10819 -DARDUINO_WisCore_RAK4631_Board -DARDU
 build: $(SRC).hex
 
 $(SRC).hex: $(SRC).elf
-	$(AVR_BIN_DIR)/avr-objcopy -O ihex $< $@
+	$(GCC_PATH)/bin/arm-none-eabi-objcopy -O ihex $< $@
 
 $(SRC).elf: $(SRC).c
 
@@ -108,10 +111,23 @@ $(SRC).elf: $(SRC).c
 		wget https://github.com/adafruit/Adafruit_Sensor/archive/refs/tags/1.1.4.tar.gz -O tmp/adasensor.tar.gz;\
 		tar -xzf tmp/adasensor.tar.gz -C tmp;\
 	fi	
+
+	@if [ -d "$(NRFX_PATH)" ]; then \
+        echo "$(NRFX_PATH) exists"; \
+	else \
+		wget https://github.com/NordicSemiconductor/nrfx/archive/refs/tags/v2.7.0.tar.gz -O tmp/nrfx.tar.gz;\
+		tar -xzf tmp/nrfx.tar.gz -C tmp;\
+	fi	
 	
+	@if [ -d "$(BOOTLOADER_PATH)" ]; then \
+        echo "$(BOOTLOADER_PATH) exists"; \
+	else \
+		wget https://github.com/adafruit/Adafruit_nRF52_Bootloader/archive/refs/tags/0.6.3.tar.gz -O tmp/bootloader.tar.gz;\
+		tar -xzf tmp/bootloader.tar.gz -C tmp;\
+	fi	
 
 	$(CXX) $(CFLAGS) $^ -o $@
-	$(AVR_BIN_DIR)/avr-size -C $(SRC).elf
+	$(GCC_PATH)/bin/arm-none-eabi-size $(SRC).elf
 
 .PHONY:
 clean:
@@ -119,6 +135,4 @@ clean:
 	rm -f tmp/*
 	rm -f $(SRC).elf
 	rm -f $(SRC).hex
-	rm -f *.o
-	@echo "done"
-
+INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/nordic/nrfx/drivers/include"

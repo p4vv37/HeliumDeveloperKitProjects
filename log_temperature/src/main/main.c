@@ -26,12 +26,8 @@
    WB_A1      <->  P0.31/AIN7 (AnalogIn A7)
  */
 #define DEBUG
-#include <Arduino.h>
-#include <SPI.h>
-#include <Adafruit_BME680.h> // Click to install library: http://librarymanager/All#Adafruit_BME680
 
 #include "main.h"
-#include "secrets.h"
 
 static uint8_t m_lora_app_data_buffer[LORAWAN_APP_DATA_BUFF_SIZE];            //< Lora user application data buffer.
 static lmh_app_data_t m_lora_app_data = {m_lora_app_data_buffer, 0, 0, 0, 0}; //< Lora user application data structure.
@@ -303,4 +299,8 @@ void sendLoraFrame(void)
     COUNT_FAIL++;
     Serial.printf("lmh_send fail COUNT %d\n", COUNT_FAIL);
   }
+}
+
+int main(void) {
+	return 0;
 }
