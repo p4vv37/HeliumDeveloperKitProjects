@@ -54,17 +54,16 @@ CFLAGS=$(MCU) $(CPU_SPEED) -Os -w -Wl,--gc-sections -ffunction-sections -fdata-s
 CFLAGS+= -mthumb -c -g -mfloat-abi=hard -mfpu=fpv4-sp-d16 -u _printf_float -std=gnu++11 -fno-threadsafe-statics -nostdlib --param max-inline-insns-single=500 -fno-rtti -fno-exceptions -w -x c++
 CFLAGS+= -DF_CPU=64000000 -DARDUINO=10819 -DARDUINO_WisCore_RAK4631_Board -DARDUINO_ARCH_NRF52 "-DARDUINO_BSP_VERSION=\"1.0.1\"" -DDEBUG -DNRF52840_XXAA -DUSBCON -DUSE_TINYUSB -DUSB_VID=0x239A -DUSB_PID=0x8029 "-DUSB_MANUFACTURER=\"RAKwireless\"" "-DUSB_PRODUCT=\"WisBlock RAK4631\"" -DSOFTDEVICE_PRESENT -DARDUINO_NRF52_ADAFRUIT -DNRF52_SERIES -DDX_CC_TEE -DLFS_NAME_MAX=64 -Ofast -DCFG_DEBUG=0 -DCFG_LOGGER=1 -DCFG_SYSVIEW=0 
 
+LINKER_SCRIPT  := nrf52.ld
+LDFLAGS = -T$(LINKER_SCRIPT)
+
 PORT=/dev/ttyACM0
-AVRDUDE_MCU=nRF52840
-AVRDUDE_PROG=arduino
-AVRDUDE_SPEED=115200
-AVRDUDE_CONFIG=-C $(DIR)/hardware/tools/avr/etc/avrdude.conf  
-AVRDUDE_FLAGS= # additional flags, such as -F -V
+SPEED=115200
 
 .PHONY:
 upload: $(SRC).hex
-	$(AVR_BIN_DIR)/avrdude $(AVRDUDE_FLAGS) -p $(AVRDUDE_MCU) -c $(AVRDUDE_PROG) -b $(AVRDUDE_SPEED) -P$(PORT) -Uflash:w:$(SRC).hex
-
+	adafruit-nrfutil dfu genpkg --dev-type 0x0052 --sd-req 0x00B6 --application $(SRC).hex $(SRC).zip
+	adafruit-nrfutil dfu serial --package $(SRC).zip -p $(PORT) -b $(SPEED)
 
 .PHONY:
 build: $(SRC).hex
@@ -138,7 +137,7 @@ $(SRC).elf: $(SRC).c
 	else \
 		git clone https://github.com/RAKWireless/WisBlock tmp/WisBlock;\
 	fi	
-	$(CXX) $(CFLAGS) $^ -o $@
+	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 	$(GCC_PATH)/bin/arm-none-eabi-size $(SRC).elf
 
 .PHONY:
