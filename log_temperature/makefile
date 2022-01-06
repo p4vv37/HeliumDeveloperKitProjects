@@ -1,6 +1,9 @@
+ARDUINO_PATH = /home/$(USER)/apps/arduino
+
+AVR_BIN_DIR=$(ARDUINO_PATH)/hardware/tools/avr/bin
+CXX=$(GCC_PATH)/bin/arm-none-eabi-g++ 
 SRC=src/main/main
 CWD = $(shell pwd)
-ARDUINO_PATH = /home/$(USER)/apps/arduino
 
 RAK_PATH = $(CWD)/tmp/RAK-nRF52-Arduino-1.0.1
 CMSIS_PATH = $(CWD)/tmp/ARM.CMSIS.5.7.0
@@ -12,7 +15,6 @@ SX126_PATH = $(CWD)/tmp/SX126x-Arduino-2.0.8
 WISBLOCK_PATH = $(CWD)/tmp/WisBlock
 
 INCLUDE= -I "$(RAK_PATH)/cores/nRF5" 
-INCLUDE+= -I "$(RAK_PATH)/variants/WisCore_RAK4631_Board" 
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/nordic/nrfx/mdk"
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/nordic/nrfx"
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/" 
@@ -25,8 +27,11 @@ INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/freertos/config"
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/freertos/portable/GCC/nrf52"
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/freertos/portable/CMSIS/nrf52"
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/freertos/portable/CMSIS/Core/Include"
+INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/nordic/nrfx/drivers/include"
 INCLUDE+= -I "$(RAK_PATH)/libraries/Adafruit_TinyUSB_Arduino/src/arduino"
 INCLUDE+= -I "$(RAK_PATH)/libraries/SPI"
+INCLUDE+= -I "$(RAK_PATH)/variants/WisCore_RAK4631_Board" 
+
 INCLUDE+= -I "$(WISBLOCK_PATH)/bootloader/RAK4630/Latest/WisCore_RAK4631_Bootloader/lib/sdk/components/libraries/timer" 
 INCLUDE+= -I "$(WISBLOCK_PATH)/bootloader/RAK4630/Latest/WisCore_RAK4631_Bootloader/lib/sdk/components/libraries/util" 
 INCLUDE+= -I "$(WISBLOCK_PATH)/bootloader/RAK4630/Latest/WisCore_RAK4631_Bootloader/src" 
@@ -41,17 +46,24 @@ INCLUDE+= -I "$(ADAFRUIT_IO_PATH)"
 INCLUDE+= -I "$(ADAFRUIT_SENSOR_PATH)" 
 
 INCLUDE+= -I "$(CMSIS_PATH)/CMSIS/Core/Include/" 
-INCLUDE+= -I "$(RAK_PATH)/variants/WisCore_RAK4631_Board"
 INCLUDE+= -I "$(SX126_PATH)/src" 
-
-CXX=$(GCC_PATH)/bin/arm-none-eabi-g++ 
-AVR_BIN_DIR=$(ARDUINO_PATH)/hardware/tools/avr/bin
 
 MCU=-mcpu=cortex-m4 #-- CPU
 CPU_SPEED=-DF_CPU=16000000UL #-- clock speed of the board (mentioned on the quartz)
 CFLAGS=$(MCU) $(CPU_SPEED) -Os -w -Wl,--gc-sections -ffunction-sections -fdata-sections $(INCLUDE) 
 CFLAGS+= -mthumb -c -g -mfloat-abi=hard -mfpu=fpv4-sp-d16 -u _printf_float -std=gnu++11 -fno-threadsafe-statics -nostdlib --param max-inline-insns-single=500 -fno-rtti -fno-exceptions -w -x c++
 CFLAGS+= -DF_CPU=64000000 -DARDUINO=10819 -DARDUINO_WisCore_RAK4631_Board -DARDUINO_ARCH_NRF52 "-DARDUINO_BSP_VERSION=\"1.0.1\"" -DDEBUG -DNRF52840_XXAA -DUSBCON -DUSE_TINYUSB -DUSB_VID=0x239A -DUSB_PID=0x8029 "-DUSB_MANUFACTURER=\"RAKwireless\"" "-DUSB_PRODUCT=\"WisBlock RAK4631\"" -DSOFTDEVICE_PRESENT -DARDUINO_NRF52_ADAFRUIT -DNRF52_SERIES -DDX_CC_TEE -DLFS_NAME_MAX=64 -Ofast -DCFG_DEBUG=0 -DCFG_LOGGER=1 -DCFG_SYSVIEW=0 
+
+PORT=/dev/ttyACM0
+AVRDUDE_MCU=nRF52840
+AVRDUDE_PROG=arduino
+AVRDUDE_SPEED=115200
+AVRDUDE_CONFIG=-C $(DIR)/hardware/tools/avr/etc/avrdude.conf  
+AVRDUDE_FLAGS= # additional flags, such as -F -V
+
+.PHONY:
+upload: $(SRC).hex
+	$(AVR_BIN_DIR)/avrdude $(AVRDUDE_FLAGS) -p $(AVRDUDE_MCU) -c $(AVRDUDE_PROG) -b $(AVRDUDE_SPEED) -P$(PORT) -Uflash:w:$(SRC).hex
 
 
 .PHONY:
@@ -140,4 +152,3 @@ reset:
 	@echo Cleaning ...
 	rm -f $(SRC).elf
 	rm -f $(SRC).hex
-INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/nordic/nrfx/drivers/include"
