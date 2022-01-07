@@ -171,12 +171,6 @@ void setup()
 
   // creat a user timer to send data to server period
   uint32_t err_code;
-  err_code = timersInit();
-  if (err_code != 0)
-  {
-    Serial.printf("timersInit failed - %d\n", err_code);
-    return;
-  }
 
   // Setup the EUIs and Keys
   lmh_setDevEui(nodeDeviceEUI);
@@ -299,9 +293,4 @@ void sendLoraFrame(void)
     COUNT_FAIL++;
     Serial.printf("lmh_send fail COUNT %d\n", COUNT_FAIL);
   }
-}
-
-int main(void)
-{
-  return 0;
 }
