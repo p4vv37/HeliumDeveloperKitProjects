@@ -2,7 +2,7 @@ ARDUINO_PATH = /home/$(USER)/apps/arduino
 
 AVR_BIN_DIR=$(ARDUINO_PATH)/hardware/tools/avr/bin
 CXX=$(GCC_PATH)/bin/arm-none-eabi-g++ 
-SRC=src/main/main
+SRC=src/main
 CWD = $(shell pwd)
 
 RAK_PATH = $(CWD)/tmp/RAK-nRF52-Arduino-1.0.1
@@ -55,7 +55,14 @@ CFLAGS+= -mthumb -c -g -mfloat-abi=hard -mfpu=fpv4-sp-d16 -u _printf_float -std=
 CFLAGS+= -DF_CPU=64000000 -DARDUINO=10819 -DARDUINO_WisCore_RAK4631_Board -DARDUINO_ARCH_NRF52 "-DARDUINO_BSP_VERSION=\"1.0.1\"" -DDEBUG -DNRF52840_XXAA -DUSBCON -DUSE_TINYUSB -DUSB_VID=0x239A -DUSB_PID=0x8029 "-DUSB_MANUFACTURER=\"RAKwireless\"" "-DUSB_PRODUCT=\"WisBlock RAK4631\"" -DSOFTDEVICE_PRESENT -DARDUINO_NRF52_ADAFRUIT -DNRF52_SERIES -DDX_CC_TEE -DLFS_NAME_MAX=64 -Ofast -DCFG_DEBUG=0 -DCFG_LOGGER=1 -DCFG_SYSVIEW=0 
 
 LINKER_SCRIPT  := nrf52.ld
-LDFLAGS = -T$(LINKER_SCRIPT)
+DFLAGS += $(OPT)
+LDFLAGS += -mthumb -mabi=aapcs -L$(RAK_PATH)/cores/nRF5/nordic/nrfx/mdk -T$(LINKER_SCRIPT)
+LDFLAGS += -mcpu=cortex-m4
+LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
+# let linker dump unused sections
+LDFLAGS += -Wl,--gc-sections
+# use newlib in nano version
+LDFLAGS += --specs=nano.specs
 
 PORT=/dev/ttyACM0
 SPEED=115200
@@ -69,9 +76,9 @@ upload: $(SRC).hex
 build: $(SRC).hex
 
 $(SRC).hex: $(SRC).elf
-	$(GCC_PATH)/bin/arm-none-eabi-objcopy -O ihex $< $@
+	$(GCC_PATH)/bin/arm-none-eabi-objcopy -O ihex $< $@ 
 
-$(SRC).elf: $(SRC).c
+$(SRC).elf: $(SRC).cpp
 
 	@if [ -d "$(ARDUINO_PATH)" ]]; then\
 		echo "Arduino need to be installed in $(ARDUINO_PATH)"; \

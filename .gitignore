@@ -85,3 +85,6 @@ lint/tmp/
 # lint/reports/
 log_temperature/src/main/secrets.h
 log_temperature/tmp/*
+log_temperature/src/main.hex
+.gitignore
+.vscode/settings.json
