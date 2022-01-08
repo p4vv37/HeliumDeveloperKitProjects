@@ -2,7 +2,8 @@ ARDUINO_PATH = /home/$(USER)/apps/arduino
 
 AVR_BIN_DIR=$(ARDUINO_PATH)/hardware/tools/avr/bin
 CXX=$(GCC_PATH)/bin/arm-none-eabi-g++ 
-SRC=src/main
+SRC_NAME=main
+SRC=src/$(SRC_NAME)
 CWD = $(shell pwd)
 
 RAK_PATH = $(CWD)/tmp/RAK-nRF52-Arduino-1.0.1
@@ -62,21 +63,21 @@ LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
 # let linker dump unused sections
 LDFLAGS += -Wl,--gc-sections
 # use newlib in nano version
-LDFLAGS += --specs=nano.specs
+LDFLAGS += -Ltmp/package -save-temps -L/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/linker -Tnrf52840_s140_v6.ld  -Wl,-Map,tmp/package/main.cpp.map -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -u _printf_float -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--wrap=malloc -Wl,--wrap=free --specs=nano.specs --specs=nosys.specs
 
 PORT=/dev/ttyACM0
 SPEED=115200
 
 .PHONY:
-upload: $(SRC).hex
-	adafruit-nrfutil dfu genpkg --dev-type 0x0052 --sd-req 0x00B6 --application $(SRC).hex $(SRC).zip
-	adafruit-nrfutil dfu serial --package $(SRC).zip -p $(PORT) -b $(SPEED)
+upload: tmp/package/$(SRC_NAME).cpp.hex
+	adafruit-nrfutil dfu genpkg --dev-type 0x0052 --sd-req 0x00B6 --application tmp/package/$(SRC_NAME).cpp.hex tmp/package/$(SRC_NAME).cpp.zip
+	adafruit-nrfutil --verbose dfu serial -pkg tmp/package/$(SRC_NAME).cpp.zip -p $(PORT) -b 115200 --singlebank 
 
 .PHONY:
-build: $(SRC).hex
+build: tmp/package/$(SRC_NAME).cpp.hex
 
-$(SRC).hex: $(SRC).elf
-	$(GCC_PATH)/bin/arm-none-eabi-objcopy -O ihex $< $@ 
+tmp/package/main.cpp.hex: $(SRC).elf
+	/home/pawel/.arduino15/packages/rakwireless/tools/arm-none-eabi-gcc/9-2019q4/bin/arm-none-eabi-objcopy -O ihex tmp/package/$(SRC_NAME).cpp.elf tmp/package/$(SRC_NAME).cpp.hex
 
 $(SRC).elf: $(SRC).cpp
 
@@ -144,6 +145,9 @@ $(SRC).elf: $(SRC).cpp
 	else \
 		git clone https://github.com/RAKWireless/WisBlock tmp/WisBlock;\
 	fi	
+	/home/pawel/apps/arduino/arduino-builder -dump-prefs -logger=machine -hardware /home/pawel/apps/arduino/hardware -hardware /home/pawel/.arduino15/packages -tools /home/pawel/apps/arduino/tools-builder -tools /home/pawel/apps/arduino/hardware/tools/avr -tools /home/pawel/.arduino15/packages -built-in-libraries /home/pawel/apps/arduino/libraries -libraries /home/pawel/Arduino/libraries -fqbn=rakwireless:nrf52:WisCoreRAK4631Board:softdevice=s140v6,debug=l0 -vid-pid=239A_8029 -ide-version=10819 -build-path tmp/package -warnings=none -build-cache /tmp/arduino_cache_61686 -prefs=build.warn_data_percentage=75 -prefs=runtime.tools.arm-none-eabi-gcc.path=/home/pawel/.arduino15/packages/rakwireless/tools/arm-none-eabi-gcc/9-2019q4 -prefs=runtime.tools.arm-none-eabi-gcc-9-2019q4.path=/home/pawel/.arduino15/packages/rakwireless/tools/arm-none-eabi-gcc/9-2019q4 -prefs=runtime.tools.nrfjprog.path=/home/pawel/.arduino15/packages/rakwireless/tools/nrfjprog/9.4.0 -prefs=runtime.tools.nrfjprog-9.4.0.path=/home/pawel/.arduino15/packages/rakwireless/tools/nrfjprog/9.4.0 -prefs=runtime.tools.CMSIS.path=/home/pawel/.arduino15/packages/rakwireless/tools/CMSIS/5.7.0 -prefs=runtime.tools.CMSIS-5.7.0.path=/home/pawel/.arduino15/packages/rakwireless/tools/CMSIS/5.7.0 -verbose $(SRC).cpp
+	/home/pawel/apps/arduino/arduino-builder -compile -logger=machine -hardware /home/pawel/apps/arduino/hardware -hardware /home/pawel/.arduino15/packages -tools /home/pawel/apps/arduino/tools-builder -tools /home/pawel/apps/arduino/hardware/tools/avr -tools /home/pawel/.arduino15/packages -built-in-libraries /home/pawel/apps/arduino/libraries -libraries /home/pawel/Arduino/libraries -fqbn=rakwireless:nrf52:WisCoreRAK4631Board:softdevice=s140v6,debug=l0 -vid-pid=239A_8029 -ide-version=10819 -build-path tmp/package -warnings=none -build-cache /tmp/arduino_cache_61686 -prefs=build.warn_data_percentage=75 -prefs=runtime.tools.arm-none-eabi-gcc.path=/home/pawel/.arduino15/packages/rakwireless/tools/arm-none-eabi-gcc/9-2019q4 -prefs=runtime.tools.arm-none-eabi-gcc-9-2019q4.path=/home/pawel/.arduino15/packages/rakwireless/tools/arm-none-eabi-gcc/9-2019q4 -prefs=runtime.tools.nrfjprog.path=/home/pawel/.arduino15/packages/rakwireless/tools/nrfjprog/9.4.0 -prefs=runtime.tools.nrfjprog-9.4.0.path=/home/pawel/.arduino15/packages/rakwireless/tools/nrfjprog/9.4.0 -prefs=runtime.tools.CMSIS.path=/home/pawel/.arduino15/packages/rakwireless/tools/CMSIS/5.7.0 -prefs=runtime.tools.CMSIS-5.7.0.path=/home/pawel/.arduino15/packages/rakwireless/tools/CMSIS/5.7.0 -verbose $(SRC).cpp
+
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 	$(GCC_PATH)/bin/arm-none-eabi-size $(SRC).elf
 
@@ -153,8 +157,14 @@ clean:
 	rm -fr tmp/*
 	rm -f $(SRC).elf
 	rm -f $(SRC).hex
+	rm -rf tmp/package*
+	mkdir tmp/package
+	mkdir tmp
 .PHONY:
 reset:
 	@echo Cleaning ...
 	rm -f $(SRC).elf
 	rm -f $(SRC).hex
+	rm -rf tmp/package*
+	mkdir tmp/package
+	mkdir tmp
