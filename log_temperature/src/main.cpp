@@ -188,7 +188,6 @@ void setup()
   // Start Join procedure
   Serial.println("Joining started..");
   lmh_join();
-  Serial.println("Joining ended.");
   timersInit();
 }
 
