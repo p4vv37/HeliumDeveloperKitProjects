@@ -78,10 +78,10 @@ upload: tmp/package/$(SRC_NAME).cpp.hex
 .PHONY:
 build: tmp/package/$(SRC_NAME).cpp.hex
 
-tmp/package/main.cpp.hex: $(SRC).elf
+tmp/package/$(SRC_NAME).cpp.hex: tmp/package/$(SRC_NAME).cpp.elf
 	$(GCC_PATH)/bin/arm-none-eabi-objcopy -O ihex tmp/package/$(SRC_NAME).cpp.elf tmp/package/$(SRC_NAME).cpp.hex
 
-$(SRC).elf: $(SRC).cpp
+tmp/package/$(SRC_NAME).cpp.elf: $(SRC).cpp
 
 	@if [ -d "$(ARDUINO_PATH)" ]]; then\
 		echo "Arduino need to be installed in $(ARDUINO_PATH)"; \
@@ -105,6 +105,11 @@ $(SRC).elf: $(SRC).cpp
 	else \
 		wget https://github.com/RAKWireless/RAK-nRF52-Arduino/archive/1.0.1.tar.gz?raw=true -O tmp/nRF52.tar.gz;\
 		tar -xzf tmp/nRF52.tar.gz -C tmp;\
+	fi
+
+	@if [ -d "$(CWD)/tmp/packages/rakwireless/hardware/nrf52" ]]; then\
+        echo "$(CWD)/tmp/packages/rakwireless/hardware/nrf52 exists"; \
+	else \
 		mkdir $(CWD)/tmp/packages;\
 		mkdir $(CWD)/tmp/packages/rakwireless;\
 		mkdir $(CWD)/tmp/packages/rakwireless/hardware;\
@@ -162,9 +167,6 @@ $(SRC).elf: $(SRC).cpp
 
 	$(ARDUINO_PATH)/arduino-builder -dump-prefs -logger=machine -hardware $(ARDUINO_PATH)/hardware -hardware $(PACKAGES_PATH) -tools $(ARDUINO_PATH)/tools-builder -tools $(ARDUINO_PATH)/hardware/tools/avr -tools tmp -built-in-libraries $(ARDUINO_PATH)/libraries -libraries tmp -fqbn=rakwireless:nrf52:WisCoreRAK4631Board:softdevice=s140v6,debug=l0 -vid-pid=239A_8029 -ide-version=10819 -build-path tmp/package -warnings=none -build-cache tmp/arduino_cache -prefs=build.warn_data_percentage=75 -prefs=runtime.tools.arm-none-eabi-gcc.path=$(GCC_PATH) -prefs=runtime.tools.arm-none-eabi-gcc-9-2019q4.path=$(GCC_PATH) -prefs=runtime.tools.nrfjprog.path=$(NRFJ_PATH) -prefs=runtime.tools.nrfjprog-9.4.0.path=$(NRFJ_PATH) -prefs=runtime.tools.CMSIS.path=$(CMSIS_PATH) -prefs=runtime.tools.CMSIS-5.7.0.path=$(CMSIS_PATH) -verbose $(SRC).cpp
 	$(ARDUINO_PATH)/arduino-builder -compile -logger=machine -hardware $(ARDUINO_PATH)/hardware -hardware $(PACKAGES_PATH) -tools $(ARDUINO_PATH)/tools-builder -tools $(ARDUINO_PATH)/hardware/tools/avr -tools tmp -built-in-libraries $(ARDUINO_PATH)/libraries -libraries tmp -fqbn=rakwireless:nrf52:WisCoreRAK4631Board:softdevice=s140v6,debug=l0 -vid-pid=239A_8029 -ide-version=10819 -build-path tmp/package -warnings=none -build-cache tmp/arduino_cache -prefs=build.warn_data_percentage=75 -prefs=runtime.tools.arm-none-eabi-gcc.path=$(GCC_PATH) -prefs=runtime.tools.arm-none-eabi-gcc-9-2019q4.path=$(GCC_PATH) -prefs=runtime.tools.nrfjprog.path=$(NRFJ_PATH) -prefs=runtime.tools.nrfjprog-9.4.0.path=$(NRFJ_PATH) -prefs=runtime.tools.CMSIS.path=$(CMSIS_PATH) -prefs=runtime.tools.CMSIS-5.7.0.path=$(CMSIS_PATH) -verbose $(SRC).cpp
-
-	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
-	$(GCC_PATH)/bin/arm-none-eabi-size $(SRC).elf
 
 .PHONY:
 clean:
