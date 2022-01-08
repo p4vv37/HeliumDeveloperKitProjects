@@ -14,6 +14,8 @@ ADAFRUIT_IO_PATH = $(CWD)/tmp/Adafruit_BusIO-1.9.9
 ADAFRUIT_SENSOR_PATH = $(CWD)/tmp/Adafruit_Sensor-1.1.4
 SX126_PATH = $(CWD)/tmp/SX126x-Arduino-2.0.8
 WISBLOCK_PATH = $(CWD)/tmp/WisBlock
+NRFJ_PATH = $(CWD)/tmp/nrfjprog
+PACKAGES_PATH = $(CWD)/tmp/packages
 
 INCLUDE= -I "$(RAK_PATH)/cores/nRF5" 
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/nordic/nrfx/mdk"
@@ -77,7 +79,7 @@ upload: tmp/package/$(SRC_NAME).cpp.hex
 build: tmp/package/$(SRC_NAME).cpp.hex
 
 tmp/package/main.cpp.hex: $(SRC).elf
-	/home/pawel/.arduino15/packages/rakwireless/tools/arm-none-eabi-gcc/9-2019q4/bin/arm-none-eabi-objcopy -O ihex tmp/package/$(SRC_NAME).cpp.elf tmp/package/$(SRC_NAME).cpp.hex
+	$(GCC_PATH)/bin/arm-none-eabi-objcopy -O ihex tmp/package/$(SRC_NAME).cpp.elf tmp/package/$(SRC_NAME).cpp.hex
 
 $(SRC).elf: $(SRC).cpp
 
@@ -103,6 +105,11 @@ $(SRC).elf: $(SRC).cpp
 	else \
 		wget https://github.com/RAKWireless/RAK-nRF52-Arduino/archive/1.0.1.tar.gz?raw=true -O tmp/nRF52.tar.gz;\
 		tar -xzf tmp/nRF52.tar.gz -C tmp;\
+		mkdir $(CWD)/tmp/packages;\
+		mkdir $(CWD)/tmp/packages/rakwireless;\
+		mkdir $(CWD)/tmp/packages/rakwireless/hardware;\
+		mkdir $(CWD)/tmp/packages/rakwireless/hardware/nrf52;\
+		ln -s $(RAK_PATH) $(CWD)/tmp/packages/rakwireless/hardware/nrf52/1.0.1;\
 	fi
 
 	@if [ -d "$(GCC_PATH)" ]; then \
@@ -145,8 +152,16 @@ $(SRC).elf: $(SRC).cpp
 	else \
 		git clone https://github.com/RAKWireless/WisBlock tmp/WisBlock;\
 	fi	
-	/home/pawel/apps/arduino/arduino-builder -dump-prefs -logger=machine -hardware /home/pawel/apps/arduino/hardware -hardware /home/pawel/.arduino15/packages -tools /home/pawel/apps/arduino/tools-builder -tools /home/pawel/apps/arduino/hardware/tools/avr -tools /home/pawel/.arduino15/packages -built-in-libraries /home/pawel/apps/arduino/libraries -libraries /home/pawel/Arduino/libraries -fqbn=rakwireless:nrf52:WisCoreRAK4631Board:softdevice=s140v6,debug=l0 -vid-pid=239A_8029 -ide-version=10819 -build-path tmp/package -warnings=none -build-cache /tmp/arduino_cache_61686 -prefs=build.warn_data_percentage=75 -prefs=runtime.tools.arm-none-eabi-gcc.path=/home/pawel/.arduino15/packages/rakwireless/tools/arm-none-eabi-gcc/9-2019q4 -prefs=runtime.tools.arm-none-eabi-gcc-9-2019q4.path=/home/pawel/.arduino15/packages/rakwireless/tools/arm-none-eabi-gcc/9-2019q4 -prefs=runtime.tools.nrfjprog.path=/home/pawel/.arduino15/packages/rakwireless/tools/nrfjprog/9.4.0 -prefs=runtime.tools.nrfjprog-9.4.0.path=/home/pawel/.arduino15/packages/rakwireless/tools/nrfjprog/9.4.0 -prefs=runtime.tools.CMSIS.path=/home/pawel/.arduino15/packages/rakwireless/tools/CMSIS/5.7.0 -prefs=runtime.tools.CMSIS-5.7.0.path=/home/pawel/.arduino15/packages/rakwireless/tools/CMSIS/5.7.0 -verbose $(SRC).cpp
-	/home/pawel/apps/arduino/arduino-builder -compile -logger=machine -hardware /home/pawel/apps/arduino/hardware -hardware /home/pawel/.arduino15/packages -tools /home/pawel/apps/arduino/tools-builder -tools /home/pawel/apps/arduino/hardware/tools/avr -tools /home/pawel/.arduino15/packages -built-in-libraries /home/pawel/apps/arduino/libraries -libraries /home/pawel/Arduino/libraries -fqbn=rakwireless:nrf52:WisCoreRAK4631Board:softdevice=s140v6,debug=l0 -vid-pid=239A_8029 -ide-version=10819 -build-path tmp/package -warnings=none -build-cache /tmp/arduino_cache_61686 -prefs=build.warn_data_percentage=75 -prefs=runtime.tools.arm-none-eabi-gcc.path=/home/pawel/.arduino15/packages/rakwireless/tools/arm-none-eabi-gcc/9-2019q4 -prefs=runtime.tools.arm-none-eabi-gcc-9-2019q4.path=/home/pawel/.arduino15/packages/rakwireless/tools/arm-none-eabi-gcc/9-2019q4 -prefs=runtime.tools.nrfjprog.path=/home/pawel/.arduino15/packages/rakwireless/tools/nrfjprog/9.4.0 -prefs=runtime.tools.nrfjprog-9.4.0.path=/home/pawel/.arduino15/packages/rakwireless/tools/nrfjprog/9.4.0 -prefs=runtime.tools.CMSIS.path=/home/pawel/.arduino15/packages/rakwireless/tools/CMSIS/5.7.0 -prefs=runtime.tools.CMSIS-5.7.0.path=/home/pawel/.arduino15/packages/rakwireless/tools/CMSIS/5.7.0 -verbose $(SRC).cpp
+
+	@if [ -d "$(NRFJ_PATH)" ]; then \
+        echo "$(NRFJ_PATH) exists"; \
+	else \
+		wget https://github.com/adafruit/Adafruit_nRF52_Arduino/releases/download/gcc-5_2-2015q4/nrfjprog-9.4.0-linux64.tar.bz2 -O tmp/nrfjprog.tar.bz2;\
+		tar -xvjf tmp/nrfjprog.tar.bz2 -C tmp;\
+	fi
+
+	$(ARDUINO_PATH)/arduino-builder -dump-prefs -logger=machine -hardware $(ARDUINO_PATH)/hardware -hardware $(PACKAGES_PATH) -tools $(ARDUINO_PATH)/tools-builder -tools $(ARDUINO_PATH)/hardware/tools/avr -tools tmp -built-in-libraries $(ARDUINO_PATH)/libraries -libraries tmp -fqbn=rakwireless:nrf52:WisCoreRAK4631Board:softdevice=s140v6,debug=l0 -vid-pid=239A_8029 -ide-version=10819 -build-path tmp/package -warnings=none -build-cache tmp/arduino_cache -prefs=build.warn_data_percentage=75 -prefs=runtime.tools.arm-none-eabi-gcc.path=$(GCC_PATH) -prefs=runtime.tools.arm-none-eabi-gcc-9-2019q4.path=$(GCC_PATH) -prefs=runtime.tools.nrfjprog.path=$(NRFJ_PATH) -prefs=runtime.tools.nrfjprog-9.4.0.path=$(NRFJ_PATH) -prefs=runtime.tools.CMSIS.path=$(CMSIS_PATH) -prefs=runtime.tools.CMSIS-5.7.0.path=$(CMSIS_PATH) -verbose $(SRC).cpp
+	$(ARDUINO_PATH)/arduino-builder -compile -logger=machine -hardware $(ARDUINO_PATH)/hardware -hardware $(PACKAGES_PATH) -tools $(ARDUINO_PATH)/tools-builder -tools $(ARDUINO_PATH)/hardware/tools/avr -tools tmp -built-in-libraries $(ARDUINO_PATH)/libraries -libraries tmp -fqbn=rakwireless:nrf52:WisCoreRAK4631Board:softdevice=s140v6,debug=l0 -vid-pid=239A_8029 -ide-version=10819 -build-path tmp/package -warnings=none -build-cache tmp/arduino_cache -prefs=build.warn_data_percentage=75 -prefs=runtime.tools.arm-none-eabi-gcc.path=$(GCC_PATH) -prefs=runtime.tools.arm-none-eabi-gcc-9-2019q4.path=$(GCC_PATH) -prefs=runtime.tools.nrfjprog.path=$(NRFJ_PATH) -prefs=runtime.tools.nrfjprog-9.4.0.path=$(NRFJ_PATH) -prefs=runtime.tools.CMSIS.path=$(CMSIS_PATH) -prefs=runtime.tools.CMSIS-5.7.0.path=$(CMSIS_PATH) -verbose $(SRC).cpp
 
 	$(CXX) $(CFLAGS) $^ -o $@ $(LDFLAGS)
 	$(GCC_PATH)/bin/arm-none-eabi-size $(SRC).elf
@@ -158,13 +173,13 @@ clean:
 	rm -f $(SRC).elf
 	rm -f $(SRC).hex
 	rm -rf tmp/package*
+	rm -rf tmp/arduino_cache*
 	mkdir tmp/package
-	mkdir tmp
 .PHONY:
 reset:
 	@echo Cleaning ...
 	rm -f $(SRC).elf
 	rm -f $(SRC).hex
 	rm -rf tmp/package*
+	rm -rf tmp/arduino_cache*
 	mkdir tmp/package
-	mkdir tmp
