@@ -88,3 +88,5 @@ log_temperature/tmp/*
 log_temperature/src/main.hex
 .gitignore
 .vscode/settings.json
+log_temperature/main.ii
+log_temperature/main.s

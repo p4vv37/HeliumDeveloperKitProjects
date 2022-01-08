@@ -1,5 +1,5 @@
 /**
- * 
+ *
  * Based on: https://github.com/RAKWireless/WisBlock/blob/master/examples/RAK4630/solutions/Environment_Monitoring/Environment_Monitoring.ino
  * Updated to match https://www.arduino.cc/en/Reference/StyleGuide
  * This code reads tempreature, pressure etc. from an environment sensor and uploads it via Helium network.
@@ -10,9 +10,9 @@
  *        and send the data to lora gateway.
  * @version 0.1
  * @date 2020-08-21
- * 
+ *
  * @copyright Copyright (c) 2020
- * 
+ *
  * @note RAK4631 GPIO mapping to nRF52840 GPIO ports
    RAK4631    <->  nRF52840
    WB_IO1     <->  P0.17 (GPIO 17)
@@ -84,7 +84,7 @@ static lmh_callback_t G_LORA_CALLBACKS = {
     lorawanJoinFailedHandler};
 
 /**@brief Structure containing LoRaWan parameters, needed for lmh_init()
-*/
+ */
 static lmh_param_t G_LORA_PARAM_INIT = {LORAWAN_ADR_ON, LORAWAN_DATERATE, LORAWAN_PUBLIC_NETWORK, JOINREQ_NBTRIALS, LORAWAN_TX_POWER, LORAWAN_DUTYCYCLE_OFF};
 
 Adafruit_BME680 bme;
@@ -110,7 +110,6 @@ void setup()
 {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
-
   // Initialize LoRa chip.
   lora_rak4630_init();
   initBme680();
@@ -126,11 +125,13 @@ void setup()
     }
     else
     {
+      // turn the LED off by making the voltage LOW
+      digitalWrite(LED_BUILTIN2, HIGH);
       break;
     }
   }
   Serial.println("=====================================");
-  Serial.println("Welcome to RAK4630 LoRaWan!!!");
+  Serial.println("Welcome to RAK4630 LoRaWan!!!WORKING");
 #ifdef OTAA
   Serial.println("Type: OTAA");
 #else
@@ -185,19 +186,30 @@ void setup()
     return;
   }
   // Start Join procedure
+  Serial.println("Joining started..");
   lmh_join();
+  Serial.println("Joining ended.");
+  timersInit();
 }
 
 /**@brief Structure containing LoRaWan callback functions, needed for lmh_init()
-*/
+ */
 
 static uint32_t COUNT = 0;
 static uint32_t COUNT_FAIL = 0;
 
 void loop()
 {
-  // Put your application tasks here, like reading of sensors,
-  // Controlling actuators and/or other functions.
+  // // turn the LED on (HIGH is the voltage level)
+  // digitalWrite(LED_BUILTIN, HIGH);
+  // // wait for a second
+  // delay(100);
+  // // turn the LED off by making the voltage LOW
+  // digitalWrite(LED_BUILTIN, LOW);
+  // // wait for a second
+  // delay(100);
+  // //Serial.println("Type: ABP");
+  // delay(200);
 }
 
 /**@brief Function for handling user timerout event.
@@ -228,36 +240,38 @@ void bme680Get()
   m_lora_app_data.port = PORT;
 
   double temp = bme.temperature;
-  // Serial.printf("temp: %f\n", temp);
+  Serial.printf("temp: %f\n", temp);
   double pres = bme.pressure / 100.0;
-  // Serial.printf("pres: %f\n", pres);
+  Serial.printf("pres: %f\n", pres);
   double hum = bme.humidity;
-  // Serial.printf("humidity: %f\n", hum);
+  Serial.printf("humidity: %f\n", hum);
   uint32_t gas = bme.gas_resistance;
 
   uint16_t t = temp * 100;
   uint16_t h = hum * 100;
   uint32_t pre = pres * 100;
-  // Serial.printf("buffsize: %d, \n", m_lora_app_data.buffsize);
-  //result: T=28.25C, RH=50.00%, P=958.57hPa, G=100406 Ohms
+  Serial.printf("buffsize: %d, \n", m_lora_app_data.buffsize);
+  // result: T=28.25C, RH=50.00%, P=958.57hPa, G=100406 Ohms
   m_lora_app_data.buffer[i++] = 0x01;
   m_lora_app_data.buffer[i++] = (uint8_t)(t >> 8);
   m_lora_app_data.buffer[i++] = (uint8_t)t;
-  m_lora_app_data.buffer[i++] = (uint8_t)(h >> 8);
-  m_lora_app_data.buffer[i++] = (uint8_t)h;
-  m_lora_app_data.buffer[i++] = (uint8_t)((pre & 0xFF000000) >> 24);
-  m_lora_app_data.buffer[i++] = (uint8_t)((pre & 0x00FF0000) >> 16);
-  m_lora_app_data.buffer[i++] = (uint8_t)((pre & 0x0000FF00) >> 8);
-  m_lora_app_data.buffer[i++] = (uint8_t)(pre & 0x000000FF);
-  m_lora_app_data.buffer[i++] = (uint8_t)((gas & 0xFF000000) >> 24);
-  m_lora_app_data.buffer[i++] = (uint8_t)((gas & 0x00FF0000) >> 16);
-  m_lora_app_data.buffer[i++] = (uint8_t)((gas & 0x0000FF00) >> 8);
-  m_lora_app_data.buffer[i++] = (uint8_t)(gas & 0x000000FF);
+  // m_lora_app_data.buffer[i++] = (uint8_t)(h >> 8);
+  // m_lora_app_data.buffer[i++] = (uint8_t)h;
+  // m_lora_app_data.buffer[i++] = (uint8_t)((pre & 0xFF000000) >> 24);
+  // m_lora_app_data.buffer[i++] = (uint8_t)((pre & 0x00FF0000) >> 16);
+  // m_lora_app_data.buffer[i++] = (uint8_t)((pre & 0x0000FF00) >> 8);
+  // m_lora_app_data.buffer[i++] = (uint8_t)(pre & 0x000000FF);
+  // m_lora_app_data.buffer[i++] = (uint8_t)((gas & 0xFF000000) >> 24);
+  // m_lora_app_data.buffer[i++] = (uint8_t)((gas & 0x00FF0000) >> 16);
+  // m_lora_app_data.buffer[i++] = (uint8_t)((gas & 0x0000FF00) >> 8);
+  // m_lora_app_data.buffer[i++] = (uint8_t)(gas & 0x000000FF);
   m_lora_app_data.buffsize = i;
-  Serial.printf("i: %d, buffsize: %d\n", i, m_lora_app_data.buffsize);
+  // Serial.printf("i: %d, buffsize: %d\n", i, m_lora_app_data.buffsize);
   // for (int i = 0; i < m_lora_app_data.buffsize - 1; ++i) {
   //     Serial.printf("%d, ", m_lora_app_data_buffer[i]);
   // }
+  Serial.printf("sending..\n");
+  Serial.printf("sending..\n");
   Serial.printf("sending..\n");
 }
 
@@ -265,7 +279,7 @@ void sendLoraFrame(void)
 {
   if (lmh_join_status_get() != LMH_SET)
   {
-    //Not joined, try again later
+    // Not joined, try again later
     return;
   }
   if (!bme.performReading())
