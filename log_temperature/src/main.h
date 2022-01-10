@@ -25,8 +25,6 @@ const DeviceClass_t CURRENT_CLASS = CLASS_A;
 const eLoRaMacRegion_t CURRENT_REGION = LORAMAC_REGION_EU868; /* Region:EU868*/
 const lmh_confirm CURRENT_CONFIRM = LMH_UNCONFIRMED_MSG;      /* confirm/unconfirm packet definition*/
 const int PORT = LORAWAN_APP_PORT;                            /* data port*/
-/**@brief Structure containing LoRaWan parameters, needed for lmh_init()
- */
 
 // RAK4630 supply two LED
 #ifndef LED_BUILTIN

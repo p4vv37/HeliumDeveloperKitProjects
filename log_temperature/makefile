@@ -62,9 +62,7 @@ DFLAGS += $(OPT)
 LDFLAGS += -mthumb -mabi=aapcs -L$(RAK_PATH)/cores/nRF5/nordic/nrfx/mdk -T$(LINKER_SCRIPT)
 LDFLAGS += -mcpu=cortex-m4
 LDFLAGS += -mfloat-abi=hard -mfpu=fpv4-sp-d16
-# let linker dump unused sections
 LDFLAGS += -Wl,--gc-sections
-# use newlib in nano version
 LDFLAGS += -Ltmp/package -save-temps -L/home/pawel/.arduino15/packages/rakwireless/hardware/nrf52/1.0.1/cores/nRF5/linker -Tnrf52840_s140_v6.ld  -Wl,-Map,tmp/package/main.cpp.map -mcpu=cortex-m4 -mthumb -mfloat-abi=hard -mfpu=fpv4-sp-d16 -u _printf_float -Wl,--cref -Wl,--check-sections -Wl,--gc-sections -Wl,--unresolved-symbols=report-all -Wl,--warn-common -Wl,--warn-section-align -Wl,--wrap=malloc -Wl,--wrap=free --specs=nano.specs --specs=nosys.specs
 
 PORT=/dev/ttyACM0
