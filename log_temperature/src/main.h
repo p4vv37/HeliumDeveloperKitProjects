@@ -23,7 +23,7 @@ const int LORAWAN_TX_POWER = TX_POWER_5;                          /*LoRaMac tx p
 const int JOINREQ_NBTRIALS = 3;                                   /**< Number of trials for the join request. */
 const DeviceClass_t CURRENT_CLASS = CLASS_A;
 const eLoRaMacRegion_t CURRENT_REGION = LORAMAC_REGION_EU868; /* Region:EU868*/
-const lmh_confirm CURRENT_CONFIRM = LMH_UNCONFIRMED_MSG;      /* confirm/unconfirm packet definition*/
+const lmh_confirm CURRENT_CONFIRM = LMH_CONFIRMED_MSG;        /* confirm/unconfirm packet definition*/
 const int PORT = LORAWAN_APP_PORT;                            /* data port*/
 
 // RAK4630 supply two LED

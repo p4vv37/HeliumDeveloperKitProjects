@@ -104,6 +104,7 @@ void initBme680(void)
   bme.setPressureOversampling(BME680_OS_4X);
   bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
   bme.setGasHeater(320, 150); // 320*C for 150 ms
+  Serial.println("BME680 sensor found and initialized!");
 }
 
 void setup()
@@ -221,25 +222,28 @@ uint32_t timersInit(void)
   return 0;
 }
 
+String data = "";
+
 void bme680Get()
 {
+  char oled_data[32] = {0};
   Serial.print("result: ");
   uint32_t i = 0;
   memset(m_lora_app_data.buffer, 0, LORAWAN_APP_DATA_BUFF_SIZE);
   m_lora_app_data.port = PORT;
 
   double temp = bme.temperature;
-  Serial.printf("temp: %f\n", temp);
   double pres = bme.pressure / 100.0;
-  Serial.printf("pres: %f\n", pres);
   double hum = bme.humidity;
-  Serial.printf("humidity: %f\n", hum);
   uint32_t gas = bme.gas_resistance;
+
+  data = "Tem:" + String(temp) + "C " + "Hum:" + String(hum) + "% " + "Pres:" + String(pres) + "KPa " + "Gas:" + String(gas) + "Ohms";
+  Serial.println(data);
 
   uint16_t t = temp * 100;
   uint16_t h = hum * 100;
   uint32_t pre = pres * 100;
-  Serial.printf("buffsize: %d, \n", m_lora_app_data.buffsize);
+
   // result: T=28.25C, RH=50.00%, P=958.57hPa, G=100406 Ohms
   m_lora_app_data.buffer[i++] = 0x01;
   m_lora_app_data.buffer[i++] = (uint8_t)(t >> 8);
