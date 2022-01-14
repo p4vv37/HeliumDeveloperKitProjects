@@ -168,6 +168,28 @@ void setup()
   // Start Join procedure
   Serial.println("Joining started..");
   lmh_join();
+
+  // lis3dh init
+  if (SensorTwo.begin() != 0)
+  {
+    Serial.println("Problem starting the sensor at 0x18.");
+  }
+  else
+  {
+    Serial.println("Sensor at 0x18 started.");
+    // Set low power mode
+    uint8_t data_to_write = 0;
+    SensorTwo.readRegister(&data_to_write, LIS3DH_CTRL_REG1);
+    data_to_write |= 0x08;
+    SensorTwo.writeRegister(LIS3DH_CTRL_REG1, data_to_write);
+    delay(100);
+
+    data_to_write = 0;
+    SensorTwo.readRegister(&data_to_write, 0x1E);
+    data_to_write |= 0x90;
+    SensorTwo.writeRegister(0x1E, data_to_write);
+    delay(100);
+  }
   // gps init
 
   pinMode(WB_IO2, OUTPUT);
@@ -257,7 +279,7 @@ void sendLoraFrame(void)
   data = "X = " + String(x) + "mg" + " Y = " + String(y) + "mg" + " Z =" + String(z) + "mg";
   Serial.println(data);
   data = "";
-  if (abs(x - z) < 400)
+  if (true || abs(x - z) < 400)
   {
     // For one second we parse GPS data and report some key values
     for (unsigned long start = millis(); millis() - start < 1000;)
