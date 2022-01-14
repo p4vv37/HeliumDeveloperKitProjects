@@ -269,7 +269,7 @@ void sendLoraFrame(void)
   }
   if (!bme.performReading())
   {
-    Serial.printf("sklipping!");
+    Serial.printf("skipping BME reading!");
     return;
   }
 
