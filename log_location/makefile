@@ -15,11 +15,12 @@ ADAFRUIT_SENSOR_PATH = $(CWD)/tmp/Adafruit_Sensor-1.1.4
 SX126_PATH = $(CWD)/tmp/SX126x-Arduino-2.0.8
 WISBLOCK_PATH = $(CWD)/tmp/WisBlock
 NRFJ_PATH = $(CWD)/tmp/nrfjprog
-GPS_PATH = $(CWD)/tmp/Adafruit_LIS3DH-1.2.3
-TGPS_PATH = $(CWD)/tmp/TinyGPS
+GPS_PATH = $(CWD)/tmp/SparkFun_LIS3DH_Arduino_Library-1.0.3
+TGPS_PATH = $(CWD)/tmp/TinyGPS-13.0.0
 PACKAGES_PATH = $(CWD)/tmp/packages
 
 INCLUDE= -I "$(GPS_PATH)" 
+INCLUDE= -I "$(TGPS_PATH)/src" 
 
 INCLUDE= -I "$(RAK_PATH)/cores/nRF5" 
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/nordic/nrfx/mdk"
@@ -170,7 +171,7 @@ tmp/package/$(SRC_NAME).cpp.elf: $(SRC).cpp
 	@if [ -d "$(GPS_PATH)" ]; then \
         echo "$(GPS_PATH) exists"; \
 	else \
-		wget https://downloads.arduino.cc/libraries/github.com/adafruit/Adafruit_LIS3DH-1.2.3.zip -O tmp/LIS3DH.zip;\
+		wget https://downloads.arduino.cc/libraries/github.com/sparkfun/SparkFun_LIS3DH_Arduino_Library-1.0.3.zip -O tmp/LIS3DH.zip;\
 		unzip tmp/LIS3DH.zip -d tmp;\
 	fi
 
