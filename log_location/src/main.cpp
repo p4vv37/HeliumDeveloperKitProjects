@@ -168,7 +168,6 @@ void setup()
   // Start Join procedure
   Serial.println("Joining started..");
   lmh_join();
-  timersInit();
   // gps init
 
   pinMode(WB_IO2, OUTPUT);
@@ -176,6 +175,8 @@ void setup()
   delay(1000);
   digitalWrite(WB_IO2, 1);
   delay(1000);
+  timersInit();
+  sendLoraFrame();
 }
 
 /**@brief Structure containing LoRaWan callback functions, needed for lmh_init()
@@ -235,11 +236,11 @@ void direction_parse(String tmp)
 
 void sendLoraFrame(void)
 {
-  if (lmh_join_status_get() != LMH_SET)
-  {
-    // Not joined, try again later
-    return;
-  }
+  // if (lmh_join_status_get() != LMH_SET)
+  //{
+  //   // Not joined, try again later
+  //   return;
+  // }
 
   float x = 0;
   float y = 0;
@@ -249,8 +250,10 @@ void sendLoraFrame(void)
 
   Serial.println("check acc!");
   x = SensorTwo.readFloatAccelX() * 1000;
+  Serial.println("SensorTwo.readFloatAccelX()");
   y = SensorTwo.readFloatAccelY() * 1000;
   z = SensorTwo.readFloatAccelZ() * 1000;
+  Serial.println("Reading finished.");
   data = "X = " + String(x) + "mg" + " Y = " + String(y) + "mg" + " Z =" + String(z) + "mg";
   Serial.println(data);
   data = "";
@@ -310,7 +313,7 @@ void sendLoraFrame(void)
         m_lora_app_data.buffer[10] = 'W';
       }
       m_lora_app_data.buffsize = 11;
-      sendLoraFrame();
+      // sendLoraFrame();
     }
     else
     {
