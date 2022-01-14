@@ -190,6 +190,13 @@ void setup()
   Serial.println("Joining started..");
   lmh_join();
   timersInit();
+  // gps init
+
+  pinMode(WB_IO2, OUTPUT);
+  digitalWrite(WB_IO2, 0);
+  delay(1000);
+  digitalWrite(WB_IO2, 1);
+  delay(1000);
 }
 
 /**@brief Structure containing LoRaWan callback functions, needed for lmh_init()
@@ -224,41 +231,27 @@ uint32_t timersInit(void)
 
 String data = "";
 
-void bme680Get()
+/**@brief Function for analytical direction.
+ */
+void direction_parse(String tmp)
 {
-  char oled_data[32] = {0};
-  Serial.print("result: ");
-  uint32_t i = 0;
-  memset(m_lora_app_data.buffer, 0, LORAWAN_APP_DATA_BUFF_SIZE);
-  m_lora_app_data.port = PORT;
+  if (tmp.indexOf(",E,") != -1)
+  {
+    direction_E_W = 0;
+  }
+  else
+  {
+    direction_E_W = 1;
+  }
 
-  double temp = bme.temperature;
-  double pres = bme.pressure / 100.0;
-  double hum = bme.humidity;
-  uint32_t gas = bme.gas_resistance;
-
-  data = "Tem:" + String(temp) + "C " + "Hum:" + String(hum) + "% " + "Pres:" + String(pres) + "KPa " + "Gas:" + String(gas) + "Ohms";
-  Serial.println(data);
-
-  uint16_t t = temp * 100;
-  uint16_t h = hum * 100;
-  uint32_t pre = pres * 100;
-
-  // result: T=28.25C, RH=50.00%, P=958.57hPa, G=100406 Ohms
-  m_lora_app_data.buffer[i++] = 0x01;
-  m_lora_app_data.buffer[i++] = (uint8_t)(t >> 8);
-  m_lora_app_data.buffer[i++] = (uint8_t)t;
-  m_lora_app_data.buffer[i++] = (uint8_t)(h >> 8);
-  m_lora_app_data.buffer[i++] = (uint8_t)h;
-  m_lora_app_data.buffer[i++] = (uint8_t)((pre & 0xFF000000) >> 24);
-  m_lora_app_data.buffer[i++] = (uint8_t)((pre & 0x00FF0000) >> 16);
-  m_lora_app_data.buffer[i++] = (uint8_t)((pre & 0x0000FF00) >> 8);
-  m_lora_app_data.buffer[i++] = (uint8_t)(pre & 0x000000FF);
-  m_lora_app_data.buffer[i++] = (uint8_t)((gas & 0xFF000000) >> 24);
-  m_lora_app_data.buffer[i++] = (uint8_t)((gas & 0x00FF0000) >> 16);
-  m_lora_app_data.buffer[i++] = (uint8_t)((gas & 0x0000FF00) >> 8);
-  m_lora_app_data.buffer[i++] = (uint8_t)(gas & 0x000000FF);
-  m_lora_app_data.buffsize = i;
+  if (tmp.indexOf(",S,") != -1)
+  {
+    direction_S_N = 0;
+  }
+  else
+  {
+    direction_S_N = 1;
+  }
 }
 
 void sendLoraFrame(void)
@@ -274,7 +267,90 @@ void sendLoraFrame(void)
     return;
   }
 
-  bme680Get();
+  float x = 0;
+  float y = 0;
+  float z = 0;
+
+  bool newData = false;
+
+  Serial.println("check acc!");
+  x = SensorTwo.readFloatAccelX() * 1000;
+  y = SensorTwo.readFloatAccelY() * 1000;
+  z = SensorTwo.readFloatAccelZ() * 1000;
+  data = "X = " + String(x) + "mg" + " Y = " + String(y) + "mg" + " Z =" + String(z) + "mg";
+  Serial.println(data);
+  data = "";
+  if (abs(x - z) < 400)
+  {
+    // For one second we parse GPS data and report some key values
+    for (unsigned long start = millis(); millis() - start < 1000;)
+    {
+      while (Serial1.available())
+      {
+        char c = Serial1.read();
+        //         Serial.write(c); // uncomment this line if you want to see the GPS data flowing
+        tmp_data += c;
+        if (gps.encode(c)) // Did a new valid sentence come in?
+          newData = true;
+      }
+    }
+    direction_parse(tmp_data);
+    tmp_data = "";
+    float flat, flon;
+    int32_t ilat, ilon;
+    if (newData)
+    {
+      unsigned long age;
+      gps.f_get_position(&flat, &flon, &age);
+      flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat;
+      ilat = flat * 100000;
+      flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon;
+      ilon = flon * 100000;
+      memset(m_lora_app_data.buffer, 0, LORAWAN_APP_DATA_BUFF_SIZE);
+      m_lora_app_data.port = PORT;
+      m_lora_app_data.buffer[0] = 0x09;
+      // lat data
+      m_lora_app_data.buffer[1] = (ilat & 0xFF000000) >> 24;
+      m_lora_app_data.buffer[2] = (ilat & 0x00FF0000) >> 16;
+      m_lora_app_data.buffer[3] = (ilat & 0x0000FF00) >> 8;
+      m_lora_app_data.buffer[4] = ilat & 0x000000FF;
+      if (direction_S_N == 0)
+      {
+        m_lora_app_data.buffer[5] = 'S';
+      }
+      else
+      {
+        m_lora_app_data.buffer[5] = 'N';
+      }
+      // lon data
+      m_lora_app_data.buffer[6] = (ilon & 0xFF000000) >> 24;
+      m_lora_app_data.buffer[7] = (ilon & 0x00FF0000) >> 16;
+      m_lora_app_data.buffer[8] = (ilon & 0x0000FF00) >> 8;
+      m_lora_app_data.buffer[9] = ilon & 0x000000FF;
+      if (direction_E_W == 0)
+      {
+        m_lora_app_data.buffer[10] = 'E';
+      }
+      else
+      {
+        m_lora_app_data.buffer[10] = 'W';
+      }
+      m_lora_app_data.buffsize = 11;
+      sendLoraFrame();
+    }
+    else
+    {
+      Serial.println("No Location Found");
+      TimerSetValue(&appTimer, LORAWAN_APP_INTERVAL);
+      TimerStart(&appTimer);
+    }
+  }
+  else
+  {
+    Serial.println("Turn WisBlock with USB pointing up to start location search");
+    TimerSetValue(&appTimer, LORAWAN_APP_INTERVAL);
+    TimerStart(&appTimer);
+  }
 
   Serial.printf("sending...");
 

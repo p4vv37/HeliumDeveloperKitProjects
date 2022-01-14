@@ -5,6 +5,16 @@
 #include "secrets.h"
 
 #include <Adafruit_BME680.h> // Click to install library: http://librarymanager/All#Adafruit_BME680
+#include <TinyGPS.h>         //http://librarymanager/All#TinyGPS
+#include "SparkFunLIS3DH.h"  //http://librarymanager/All#SparkFun-LIS3DH
+
+LIS3DH SensorTwo(I2C_MODE, 0x18);
+
+TinyGPS gps;
+
+String tmp_data = "";
+int direction_S_N = 0; // 0--S, 1--N
+int direction_E_W = 0; // 0--E, 1--W
 
 // RAK4630 supply two LED
 #ifndef LED_BUILTIN
