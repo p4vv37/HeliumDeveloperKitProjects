@@ -87,33 +87,12 @@ static lmh_callback_t G_LORA_CALLBACKS = {
  */
 static lmh_param_t G_LORA_PARAM_INIT = {LORAWAN_ADR_ON, LORAWAN_DATERATE, LORAWAN_PUBLIC_NETWORK, JOINREQ_NBTRIALS, LORAWAN_TX_POWER, LORAWAN_DUTYCYCLE_OFF};
 
-Adafruit_BME680 bme;
-void initBme680(void)
-{
-  Wire.begin();
-
-  if (!bme.begin(0x76))
-  {
-    Serial.println("Could not find a valid BME680 sensor, check wiring!");
-    return;
-  }
-
-  // Set up oversampling and filter initialization
-  bme.setTemperatureOversampling(BME680_OS_8X);
-  bme.setHumidityOversampling(BME680_OS_2X);
-  bme.setPressureOversampling(BME680_OS_4X);
-  bme.setIIRFilterSize(BME680_FILTER_SIZE_3);
-  bme.setGasHeater(320, 150); // 320*C for 150 ms
-  Serial.println("BME680 sensor found and initialized!");
-}
-
 void setup()
 {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
   // Initialize LoRa chip.
   lora_rak4630_init();
-  initBme680();
 
   // Initialize Serial for debug output
   time_t timeout = millis();
@@ -259,11 +238,6 @@ void sendLoraFrame(void)
   if (lmh_join_status_get() != LMH_SET)
   {
     // Not joined, try again later
-    return;
-  }
-  if (!bme.performReading())
-  {
-    Serial.printf("sklipping!");
     return;
   }
 

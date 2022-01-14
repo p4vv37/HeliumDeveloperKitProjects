@@ -4,9 +4,8 @@
 
 #include "secrets.h"
 
-#include <Adafruit_BME680.h> // Click to install library: http://librarymanager/All#Adafruit_BME680
-#include <TinyGPS.h>         //http://librarymanager/All#TinyGPS
-#include "SparkFunLIS3DH.h"  //http://librarymanager/All#SparkFun-LIS3DH
+#include <TinyGPS.h>        //http://librarymanager/All#TinyGPS
+#include "SparkFunLIS3DH.h" //http://librarymanager/All#SparkFun-LIS3DH
 
 LIS3DH SensorTwo(I2C_MODE, 0x18);
 
