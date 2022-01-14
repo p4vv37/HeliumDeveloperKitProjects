@@ -15,7 +15,10 @@ ADAFRUIT_SENSOR_PATH = $(CWD)/tmp/Adafruit_Sensor-1.1.4
 SX126_PATH = $(CWD)/tmp/SX126x-Arduino-2.0.8
 WISBLOCK_PATH = $(CWD)/tmp/WisBlock
 NRFJ_PATH = $(CWD)/tmp/nrfjprog
+GPS_PATH = $(CWD)/tmp/$(CWD)/tmp/packages
 PACKAGES_PATH = $(CWD)/tmp/packages
+
+INCLUDE= -I "$(GPS_PATH)" 
 
 INCLUDE= -I "$(RAK_PATH)/cores/nRF5" 
 INCLUDE+= -I "$(RAK_PATH)/cores/nRF5/nordic/nrfx/mdk"
@@ -161,6 +164,13 @@ tmp/package/$(SRC_NAME).cpp.elf: $(SRC).cpp
 	else \
 		wget https://github.com/adafruit/Adafruit_nRF52_Arduino/releases/download/gcc-5_2-2015q4/nrfjprog-9.4.0-linux64.tar.bz2 -O tmp/nrfjprog.tar.bz2;\
 		tar -xvjf tmp/nrfjprog.tar.bz2 -C tmp;\
+	fi
+
+	@if [ -d "$(GPS_PATH)" ]; then \
+        echo "$(GPS_PATH) exists"; \
+	else \
+		wget https://downloads.arduino.cc/libraries/github.com/adafruit/Adafruit_LIS3DH-1.2.3.zip -O tmp/LIS3DH.tar.bz2;\
+		unzip tmp/LIS3DH.zip -d tmp;\
 	fi
 
 	$(ARDUINO_PATH)/arduino-builder -dump-prefs -logger=machine -hardware $(ARDUINO_PATH)/hardware -hardware $(PACKAGES_PATH) -tools $(ARDUINO_PATH)/tools-builder -tools $(ARDUINO_PATH)/hardware/tools/avr -tools tmp -built-in-libraries $(ARDUINO_PATH)/libraries -libraries tmp -fqbn=rakwireless:nrf52:WisCoreRAK4631Board:softdevice=s140v6,debug=l0 -vid-pid=239A_8029 -ide-version=10819 -build-path tmp/package -warnings=none -build-cache tmp/arduino_cache -prefs=build.warn_data_percentage=75 -prefs=runtime.tools.arm-none-eabi-gcc.path=$(GCC_PATH) -prefs=runtime.tools.arm-none-eabi-gcc-9-2019q4.path=$(GCC_PATH) -prefs=runtime.tools.nrfjprog.path=$(NRFJ_PATH) -prefs=runtime.tools.nrfjprog-9.4.0.path=$(NRFJ_PATH) -prefs=runtime.tools.CMSIS.path=$(CMSIS_PATH) -prefs=runtime.tools.CMSIS-5.7.0.path=$(CMSIS_PATH) -verbose $(SRC).cpp
