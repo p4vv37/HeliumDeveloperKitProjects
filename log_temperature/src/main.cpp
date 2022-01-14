@@ -226,7 +226,6 @@ String data = "";
 
 void bme680Get()
 {
-  char oled_data[32] = {0};
   Serial.print("result: ");
   uint32_t i = 0;
   memset(m_lora_app_data.buffer, 0, LORAWAN_APP_DATA_BUFF_SIZE);
