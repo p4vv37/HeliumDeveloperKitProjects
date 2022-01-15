@@ -1,11 +1,10 @@
 #include <Arduino.h>
 #include <LoRaWan-RAK4630.h> //http://librarymanager/All#SX126x
 #include <SPI.h>
-
-#include "secrets.h"
-
 #include <TinyGPS.h>        //http://librarymanager/All#TinyGPS
 #include "SparkFunLIS3DH.h" //http://librarymanager/All#SparkFun-LIS3DH
+
+#include "secrets.h"
 
 LIS3DH SensorTwo(I2C_MODE, 0x18);
 
