@@ -197,6 +197,12 @@ void setup()
   delay(1000);
   digitalWrite(WB_IO2, 1);
   delay(1000);
+
+  Serial1.begin(9600);
+  while (!Serial1)
+    ;
+  Serial.println("gps uart init ok!");
+
   timersInit();
   sendLoraFrame();
 }
@@ -285,7 +291,7 @@ void sendLoraFrame(void)
     while (Serial1.available())
     {
       char c = Serial1.read();
-      //         Serial.write(c); // uncomment this line if you want to see the GPS data flowing
+      Serial.write(c); // uncomment this line if you want to see the GPS data flowing
       tmp_data += c;
       if (gps.encode(c)) // Did a new valid sentence come in?
         newData = true;
