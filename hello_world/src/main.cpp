@@ -190,18 +190,6 @@ void setup()
     SensorTwo.writeRegister(0x1E, data_to_write);
     delay(100);
   }
-  // gps init
-
-  pinMode(WB_IO2, OUTPUT);
-  digitalWrite(WB_IO2, 0);
-  delay(1000);
-  digitalWrite(WB_IO2, 1);
-  delay(1000);
-
-  Serial1.begin(9600);
-  while (!Serial1)
-    ;
-  Serial.println("gps uart init ok!");
 
   timersInit();
   sendLoraFrame();
@@ -239,29 +227,6 @@ uint32_t timersInit(void)
 
 String data = "";
 
-/**@brief Function for analytical direction.
- */
-void direction_parse(String tmp)
-{
-  if (tmp.indexOf(",E,") != -1)
-  {
-    direction_E_W = 0;
-  }
-  else
-  {
-    direction_E_W = 1;
-  }
-
-  if (tmp.indexOf(",S,") != -1)
-  {
-    direction_S_N = 0;
-  }
-  else
-  {
-    direction_S_N = 1;
-  }
-}
-
 void sendLoraFrame(void)
 {
   if (lmh_join_status_get() != LMH_SET)
@@ -285,67 +250,6 @@ void sendLoraFrame(void)
   data = "X = " + String(x) + "mg" + " Y = " + String(y) + "mg" + " Z =" + String(z) + "mg";
   Serial.println(data);
   data = "";
-  // For one second we parse GPS data and report some key values
-  for (unsigned long start = millis(); millis() - start < 1000;)
-  {
-    while (Serial1.available())
-    {
-      char c = Serial1.read();
-      Serial.write(c); // uncomment this line if you want to see the GPS data flowing
-      tmp_data += c;
-      if (gps.encode(c)) // Did a new valid sentence come in?
-        newData = true;
-    }
-  }
-  direction_parse(tmp_data);
-  tmp_data = "";
-  float flat, flon;
-  int32_t ilat, ilon;
-  if (newData)
-  {
-    unsigned long age;
-    gps.f_get_position(&flat, &flon, &age);
-    flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat;
-    ilat = flat * 100000;
-    flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon;
-    ilon = flon * 100000;
-    memset(m_lora_app_data.buffer, 0, LORAWAN_APP_DATA_BUFF_SIZE);
-    m_lora_app_data.port = PORT;
-    m_lora_app_data.buffer[0] = 0x09;
-    // lat data
-    m_lora_app_data.buffer[1] = (ilat & 0xFF000000) >> 24;
-    m_lora_app_data.buffer[2] = (ilat & 0x00FF0000) >> 16;
-    m_lora_app_data.buffer[3] = (ilat & 0x0000FF00) >> 8;
-    m_lora_app_data.buffer[4] = ilat & 0x000000FF;
-    if (direction_S_N == 0)
-    {
-      m_lora_app_data.buffer[5] = 'S';
-    }
-    else
-    {
-      m_lora_app_data.buffer[5] = 'N';
-    }
-    // lon data
-    m_lora_app_data.buffer[6] = (ilon & 0xFF000000) >> 24;
-    m_lora_app_data.buffer[7] = (ilon & 0x00FF0000) >> 16;
-    m_lora_app_data.buffer[8] = (ilon & 0x0000FF00) >> 8;
-    m_lora_app_data.buffer[9] = ilon & 0x000000FF;
-    if (direction_E_W == 0)
-    {
-      m_lora_app_data.buffer[10] = 'E';
-    }
-    else
-    {
-      m_lora_app_data.buffer[10] = 'W';
-    }
-    m_lora_app_data.buffsize = 11;
-  }
-  else
-  {
-    Serial.println("No Location Found");
-    TimerSetValue(&appTimer, LORAWAN_APP_INTERVAL);
-    TimerStart(&appTimer);
-  }
 
   Serial.printf("sending...");
 
