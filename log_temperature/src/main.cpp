@@ -276,7 +276,7 @@ void sendLoraFrame(void)
   bme680Get();
 
   Serial.printf("sending...");
-
+  sleep_enable();
   lmh_error_status error = lmh_send(&m_lora_app_data, CURRENT_CONFIRM);
   if (error == LMH_SUCCESS)
   {
