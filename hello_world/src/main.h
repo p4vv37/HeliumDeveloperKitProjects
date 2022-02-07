@@ -1,46 +1,33 @@
+/**
+ * @file main.h
+ * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
+ * @brief Includes, definitions and global declarations for DeepSleep example
+ * @version 0.1
+ * @date 2020-08-15
+ *
+ * @copyright Copyright (c) 2020
+ *
+ */
 #include <Arduino.h>
-#include <LoRaWan-RAK4630.h> //http://librarymanager/All#SX126x
 #include <SPI.h>
-#include "SparkFunLIS3DH.h" //http://librarymanager/All#SparkFun-LIS3DH
 
-#include "secrets.h"
+#include <LoRaWan-RAK4630.h>
 
-LIS3DH SensorTwo(I2C_MODE, 0x18);
+// Comment the next line if you want DEBUG output. But the power savings are not as good then!!!!!!!
+#define MAX_SAVE
 
-String tmp_data = "";
-// RAK4630 supply two LED
-#ifndef LED_BUILTIN
-#define LED_BUILTIN 35
-#endif
+/* Time the device is sleeping in milliseconds = 2 minutes * 60 seconds * 1000 milliseconds */
+#define SLEEP_TIME 2 * 60 * 1000
 
-#ifndef LED_BUILTIN2
-#define LED_BUILTIN2 36
-#endif
+// LoRaWan stuff
+int8_t initLoRaWan(void);
+bool sendLoRaFrame(void);
+extern SemaphoreHandle_t loraEvent;
 
-const int OTAA = 1;
-#define SCHED_MAX_EVENT_DATA_SIZE APP_TIMER_SCHED_EVENT_DATA_SIZE /**< Maximum size of scheduler events. */
-const int SCHED_QUEUE_SIZE = 60;                                  /**< Maximum number of events in the scheduler queue. */
-const int LORAWAN_DATERATE = DR_0;                                /*LoRaMac datarates definition, from DR_0 to DR_5*/
-const int LORAWAN_TX_POWER = TX_POWER_5;                          /*LoRaMac tx power definition, from TX_POWER_0 to TX_POWER_15*/
-const int JOINREQ_NBTRIALS = 3;                                   /**< Number of trials for the join request. */
-const DeviceClass_t CURRENT_CLASS = CLASS_A;
-const eLoRaMacRegion_t CURRENT_REGION = LORAMAC_REGION_EU868; /* Region:EU868*/
-const lmh_confirm CURRENT_CONFIRM = LMH_CONFIRMED_MSG;        /* confirm/unconfirm packet definition*/
-const int PORT = LORAWAN_APP_PORT;                            /* data port*/
-
-// RAK4630 supply two LED
-#ifndef LED_BUILTIN
-#define LED_BUILTIN 35
-#endif
-
-#ifndef LED_BUILTIN2
-#define LED_BUILTIN2 36
-#endif
-
-void sendLoraFrame(void);
-uint32_t timersInit(void);
-
-const int LORAWAN_APP_DATA_BUFF_SIZE = 64; /**< buffer size of the data to be transmitted. */
-const int LORAWAN_APP_INTERVAL = 20000;    /**< Defines for user timer, the application data transmission interval. 20s, value in [ms]. */
-
-TimerEvent_t appTimer;
+// Main loop stuff
+void periodicWakeup(TimerHandle_t unused);
+extern SemaphoreHandle_t taskEvent;
+extern uint8_t rcvdLoRaData[];
+extern uint8_t rcvdDataLen;
+extern uint8_t eventType;
+extern SoftwareTimer taskWakeupTimer;

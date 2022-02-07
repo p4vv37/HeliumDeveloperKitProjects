@@ -1,15 +1,11 @@
 /**
- *
- * Based on: https://github.com/RAKWireless/WisBlock/blob/master/examples/RAK4630/solutions/Environment_Monitoring/Environment_Monitoring.ino
- * Updated to match https://www.arduino.cc/en/Reference/StyleGuide
- * This code reads tempreature, pressure etc. from an environment sensor and uploads it via Helium network.
- * Original comment:
- * @file Environment_Monitoring.ino
- * @author rakwireless.com
- * @brief This sketch demonstrate how to get environment data from BME680
- *        and send the data to lora gateway.
+ * @file RAK4631-DeepSleep-LoRaWan.ino
+ * @author Bernd Giesecke (bernd.giesecke@rakwireless.com)
+ * @brief LoRaWan deep sleep example
+ * Device goes into sleep after successful OTAA/ABP network join.
+ * Wake up every SLEEP_TIME seconds. Set time in main.h
  * @version 0.1
- * @date 2020-08-21
+ * @date 2020-09-05
  *
  * @copyright Copyright (c) 2020
  *
@@ -25,243 +21,200 @@
    WB_A0      <->  P0.04/AIN2 (AnalogIn A2)
    WB_A1      <->  P0.31/AIN7 (AnalogIn A7)
  */
-#define DEBUG
-
 #include "main.h"
 
-static uint8_t m_lora_app_data_buffer[LORAWAN_APP_DATA_BUFF_SIZE];            //< Lora user application data buffer.
-static lmh_app_data_t m_lora_app_data = {m_lora_app_data_buffer, 0, 0, 0, 0}; //< Lora user application data structure.
+/** Semaphore used by events to wake up loop task */
+SemaphoreHandle_t taskEvent = NULL;
 
-void lorawanConfirmClassHandler(DeviceClass_t Class)
-{
-  Serial.printf("switch to class %c done\n", "ABC"[Class]);
-  // Informs the server that switch has occurred ASAP
-  m_lora_app_data.buffsize = 0;
-  m_lora_app_data.port = PORT;
-  lmh_send(&m_lora_app_data, CURRENT_CONFIRM);
-}
+/** Timer to wakeup task frequently and send message */
+SoftwareTimer taskWakeupTimer;
 
-/**@brief Function for handling LoRaWan received data from Gateway
+/** Buffer for received LoRaWan data */
+uint8_t rcvdLoRaData[256];
+/** Length of received data */
+uint8_t rcvdDataLen = 0;
+
+/**
+ * @brief Flag for the event type
+ * -1 => no event
+ * 0 => LoRaWan data received
+ * 1 => Timer wakeup
+ * 2 => tbd
+ * ...
+ */
+uint8_t eventType = -1;
+
+/**
+ * @brief Timer event that wakes up the loop task frequently
  *
- * @param[in] app_data  Pointer to rx data
+ * @param unused
  */
-void lorawanRxHandler(lmh_app_data_t *app_data)
+void periodicWakeup(TimerHandle_t unused)
 {
-  Serial.printf(
-      "LoRa Packet received on port %d, size:%d, rssi:%d, snr:%d, data:%s\n",
-      app_data->port, app_data->buffsize, app_data->rssi, app_data->snr,
-      app_data->buffer);
+  // Switch on blue LED to show we are awake
+  digitalWrite(LED_BUILTIN, HIGH);
+  eventType = 1;
+  // Give the semaphore, so the loop task will wake up
+  xSemaphoreGiveFromISR(taskEvent, pdFALSE);
 }
 
-/**@brief LoRa function for handling OTAA join failed
+/**
+ * @brief Arduino setup function. Called once after power-up or reset
+ *
  */
-static void lorawanJoinFailedHandler(void)
+void setup(void)
 {
-  Serial.println("OTAA join failed!");
-  Serial.println("Check your EUI's and Keys's!");
-  Serial.println("Check if a Gateway is in range!");
-}
+  // Create the LoRaWan event semaphore
+  taskEvent = xSemaphoreCreateBinary();
+  // Initialize semaphore
+  xSemaphoreGive(taskEvent);
 
-/**@brief LoRa function for handling HasJoined event.
- */
-void lorawan_has_joined_handler(void)
-{
-  Serial.println("OTAA Mode, Network Joined!");
-
-  lmh_error_status ret = lmh_class_request(CURRENT_CLASS);
-  if (ret == LMH_SUCCESS)
-  {
-    delay(1000);
-    TimerSetValue(&appTimer, LORAWAN_APP_INTERVAL);
-    TimerStart(&appTimer);
-  }
-}
-
-static lmh_callback_t G_LORA_CALLBACKS = {
-    BoardGetBatteryLevel, BoardGetUniqueId,
-    BoardGetRandomSeed, lorawanRxHandler,
-    lorawan_has_joined_handler, lorawanConfirmClassHandler,
-    lorawanJoinFailedHandler};
-
-/**@brief Structure containing LoRaWan parameters, needed for lmh_init()
- */
-static lmh_param_t G_LORA_PARAM_INIT = {LORAWAN_ADR_ON, LORAWAN_DATERATE, LORAWAN_PUBLIC_NETWORK, JOINREQ_NBTRIALS, LORAWAN_TX_POWER, LORAWAN_DUTYCYCLE_OFF};
-
-void setup()
-{
+  // Initialize the built in LED
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
-  // Initialize LoRa chip.
-  lora_rak4630_init();
 
+  // Initialize the connection status LED
+  pinMode(LED_CONN, OUTPUT);
+  digitalWrite(LED_CONN, HIGH);
+
+#ifndef MAX_SAVE
   // Initialize Serial for debug output
+  Serial.begin(115200);
+
   time_t timeout = millis();
-  Serial.begin(9600);
+  // On nRF52840 the USB serial is not available immediately
   while (!Serial)
   {
     if ((millis() - timeout) < 5000)
     {
       delay(100);
+      digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
     }
     else
     {
-      // turn the LED off by making the voltage LOW
-      digitalWrite(LED_BUILTIN2, HIGH);
       break;
     }
   }
+#endif
+
+  digitalWrite(LED_BUILTIN, LOW);
+
+#ifndef MAX_SAVE
   Serial.println("=====================================");
-  Serial.println("Welcome to RAK4630 LoRaWan!!!WORKING");
-#ifdef OTAA
-  Serial.println("Type: OTAA");
-#else
-  Serial.println("Type: ABP");
-#endif // OTAA
-
-  switch (CURRENT_REGION)
-  {
-  case LORAMAC_REGION_AS923:
-    Serial.println("Region: AS923");
-    break;
-  case LORAMAC_REGION_AU915:
-    Serial.println("Region: AU915");
-    break;
-  case LORAMAC_REGION_CN470:
-    Serial.println("Region: CN470");
-    break;
-  case LORAMAC_REGION_EU433:
-    Serial.println("Region: EU433");
-    break;
-  case LORAMAC_REGION_IN865:
-    Serial.println("Region: IN865");
-    break;
-  case LORAMAC_REGION_EU868:
-    Serial.println("Region: EU868");
-    break;
-  case LORAMAC_REGION_KR920:
-    Serial.println("Region: KR920");
-    break;
-  case LORAMAC_REGION_US915:
-    Serial.println("Region: US915");
-    break;
-  default:
-    Serial.println("Region: -");
-    break;
-  }
+  Serial.println("RAK4631 LoRaWan Deep Sleep Test");
   Serial.println("=====================================");
+#endif
 
-  // creat a user timer to send data to server period
-  uint32_t err_code;
+  // Initialize LoRaWan and start join request
+  int8_t loraInitResult = initLoRaWan();
 
-  // Setup the EUIs and Keys
-  lmh_setDevEui(nodeDeviceEUI);
-  lmh_setAppEui(nodeAppEUI);
-  lmh_setAppKey(nodeAppKey);
-
-  // Initialize LoRaWan
-  err_code = lmh_init(&G_LORA_CALLBACKS, G_LORA_PARAM_INIT, OTAA, CURRENT_CLASS, CURRENT_REGION);
-  if (err_code != 0)
+#ifndef MAX_SAVE
+  if (loraInitResult != 0)
   {
-    Serial.printf("lmh_init failed - %d\n", err_code);
-    return;
-  }
-  // Start Join procedure
-  Serial.println("Joining started..");
-  lmh_join();
+    switch (loraInitResult)
+    {
+    case -1:
+      Serial.println("SX126x init failed");
+      break;
+    case -2:
+      Serial.println("LoRaWan init failed");
+      break;
+    case -3:
+      Serial.println("Subband init error");
+      break;
+    case -4:
+      Serial.println("LoRa Task init error");
+      break;
+    default:
+      Serial.println("LoRa init unknown error");
+      break;
+    }
 
-  // lis3dh init
-  if (SensorTwo.begin() != 0)
-  {
-    Serial.println("Problem starting the sensor at 0x18.");
+    // Without working LoRa we just stop here
+    while (1)
+    {
+      Serial.println("Nothing I can do, just loving you");
+      delay(5000);
+    }
   }
-  else
-  {
-    Serial.println("Sensor at 0x18 started.");
-    // Set low power mode
-    uint8_t data_to_write = 0;
-    SensorTwo.readRegister(&data_to_write, LIS3DH_CTRL_REG1);
-    data_to_write |= 0x08;
-    SensorTwo.writeRegister(LIS3DH_CTRL_REG1, data_to_write);
-    delay(100);
+  Serial.println("LoRaWan init success");
+#endif
 
-    data_to_write = 0;
-    SensorTwo.readRegister(&data_to_write, 0x1E);
-    data_to_write |= 0x90;
-    SensorTwo.writeRegister(0x1E, data_to_write);
-    delay(100);
-  }
-
-  timersInit();
-  sendLoraFrame();
+  // Take the semaphore so the loop will go to sleep until an event happens
+  xSemaphoreTake(taskEvent, 10);
 }
 
-/**@brief Structure containing LoRaWan callback functions, needed for lmh_init()
- */
-
-static uint32_t COUNT = 0;
-static uint32_t COUNT_FAIL = 0;
-
-void loop()
-{
-}
-
-/**@brief Function for handling user timerout event.
- */
-void txLoraPeriodicHandler(void)
-{
-  TimerSetValue(&appTimer, LORAWAN_APP_INTERVAL);
-  TimerStart(&appTimer);
-  Serial.println("Sending frame now...");
-  sendLoraFrame();
-}
-
-/**@brief Function for the Timer initialization.
+/**
+ * @brief Arduino loop task. Called in a loop from the FreeRTOS task handler
  *
- * @details Initializes the timer module. This creates and starts application timers.
  */
-uint32_t timersInit(void)
+void loop(void)
 {
-  TimerInit(&appTimer, txLoraPeriodicHandler);
-  return 0;
-}
+  // Switch off blue LED to show we go to sleep
+  digitalWrite(LED_BUILTIN, LOW);
 
-String data = "";
-
-void sendLoraFrame(void)
-{
-  if (lmh_join_status_get() != LMH_SET)
+  // Sleep until we are woken up by an event
+  if (xSemaphoreTake(taskEvent, portMAX_DELAY) == pdTRUE)
   {
-    // Not joined, try again later
-    return;
-  }
+    // Switch on blue LED to show we are awake
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(500); // Only so we can see the blue LED
 
-  float x = 0;
-  float y = 0;
-  float z = 0;
+    // Check the wake up reason
+    switch (eventType)
+    {
+    case 0: // Wakeup reason is package downlink arrived
+#ifndef MAX_SAVE
+      Serial.println("Received package over LoRaWan");
+#endif
+      if (rcvdLoRaData[0] > 0x1F)
+      {
+#ifndef MAX_SAVE
+        Serial.printf("%s\n", (char *)rcvdLoRaData);
+#endif
+      }
+      else
+      {
+#ifndef MAX_SAVE
+        for (int idx = 0; idx < rcvdDataLen; idx++)
+        {
+          Serial.printf("%X ", rcvdLoRaData[idx]);
+        }
+        Serial.println("");
+#endif
+      }
 
-  bool newData = false;
+      break;
+    case 1: // Wakeup reason is timer
+#ifndef MAX_SAVE
+      Serial.println("Timer wakeup");
+#endif
+      /// \todo read sensor or whatever you need to do frequently
 
-  Serial.println("check acc!");
-  x = SensorTwo.readFloatAccelX() * 1000;
-  Serial.println("SensorTwo.readFloatAccelX()");
-  y = SensorTwo.readFloatAccelY() * 1000;
-  z = SensorTwo.readFloatAccelZ() * 1000;
-  Serial.println("Reading finished.");
-  data = "X = " + String(x) + "mg" + " Y = " + String(y) + "mg" + " Z =" + String(z) + "mg";
-  Serial.println(data);
-  data = "";
+      // Send the data package
+      if (sendLoRaFrame())
+      {
+#ifndef MAX_SAVE
+        Serial.println("LoRaWan package sent successfully");
+#endif
+      }
+      else
+      {
+#ifndef MAX_SAVE
+        Serial.println("LoRaWan package send failed");
+        /// \todo maybe you need to retry here?
+#endif
+      }
 
-  Serial.printf("sending...");
-
-  lmh_error_status error = lmh_send(&m_lora_app_data, CURRENT_CONFIRM);
-  if (error == LMH_SUCCESS)
-  {
-    COUNT++;
-    Serial.printf("lmh_send ok COUNT %d\n", COUNT);
-  }
-  else
-  {
-    COUNT_FAIL++;
-    Serial.printf("lmh_send fail COUNT %d\n", COUNT_FAIL);
+      break;
+    default:
+#ifndef MAX_SAVE
+      Serial.println("This should never happen ;-)");
+#endif
+      break;
+    }
+    digitalWrite(LED_BUILTIN, LOW);
+    // Go back to sleep
+    xSemaphoreTake(taskEvent, 10);
   }
 }

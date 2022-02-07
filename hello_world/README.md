@@ -1,4 +1,4 @@
-Simple project: Read location data from sensors and upload it to Helium network. 
+Simple project: Low power solution for sending data to LoRaWan based on  https://github.com/RAKWireless/WisBlock/blob/master/examples/RAK4630/communications/LoRa/LoRaWAN/Low_Power_Example.md
 
 Makefile is the complicated part, I could not make PlatformIO work with the board, ArduinoIDE is too primitive, so I had to create a complicated makefile that download all demendencies, compiles and uploads program to the board.
 
